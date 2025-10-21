@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { ParticleField } from './ParticleField';
 import { GradientBackground } from './GradientBackground';
+import { Garage } from './Garage';
 
 export function SceneContent() {
   const cameraOffset = useRef({ x: 0, y: 0 });
@@ -21,6 +22,9 @@ export function SceneContent() {
     <>
       <GradientBackground />
       <ParticleField />
+      
+      {/* Garage with cars */}
+      <Garage />
       
       {/* Ground plane for reflections */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
