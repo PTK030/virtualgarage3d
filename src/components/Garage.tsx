@@ -1,21 +1,26 @@
-import { useState } from 'react';
 import { Car } from './Car';
+import { useGLTF } from '@react-three/drei';
+import { type CarData } from '../hooks/useGarage';
 
-export function Garage() {
-  const [selectedCar, setSelectedCar] = useState<number | null>(null);
+// Preload models
+useGLTF.preload('/models/car1.glb');
+useGLTF.preload('/models/car2.glb');
+useGLTF.preload('/models/car3.glb');
 
-  const cars = [
-    { id: 0, color: '#3b82f6', position: [-4, 0, 0] as [number, number, number], name: 'Blue Racer' },
-    { id: 1, color: '#8b5cf6', position: [0, 0, 0] as [number, number, number], name: 'Purple Storm' },
-    { id: 2, color: '#06b6d4', position: [4, 0, 0] as [number, number, number], name: 'Cyan Flash' },
-  ];
+interface GarageProps {
+  cars: CarData[];
+  selectedCar: number | null;
+  onSelectCar: (id: number) => void;
+}
+
+export function Garage({ cars, selectedCar, onSelectCar }: GarageProps) {
 
   return (
     <group>
       {cars.map((car) => (
         <group
           key={car.id}
-          onClick={() => setSelectedCar(car.id)}
+          onClick={() => onSelectCar(car.id)}
           onPointerOver={() => document.body.style.cursor = 'pointer'}
           onPointerOut={() => document.body.style.cursor = 'default'}
         >
@@ -24,6 +29,7 @@ export function Garage() {
             position={car.position}
             name={car.name}
             isSelected={selectedCar === car.id}
+            modelPath={car.modelPath}
           />
         </group>
       ))}

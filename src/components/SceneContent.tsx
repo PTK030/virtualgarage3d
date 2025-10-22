@@ -3,8 +3,10 @@ import { useFrame } from '@react-three/fiber';
 import { ParticleField } from './ParticleField';
 import { GradientBackground } from './GradientBackground';
 import { Garage } from './Garage';
+import { useGarageContext } from '../contexts/GarageContext';
 
 export function SceneContent() {
+  const { cars, selectedCar, setSelectedCar } = useGarageContext();
   const cameraOffset = useRef({ x: 0, y: 0 });
   
   useFrame(({ camera, clock }) => {
@@ -24,7 +26,7 @@ export function SceneContent() {
       <ParticleField />
       
       {/* Garage with cars */}
-      <Garage />
+      <Garage cars={cars} selectedCar={selectedCar} onSelectCar={setSelectedCar} />
       
       {/* Ground plane for reflections */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
