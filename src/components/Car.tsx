@@ -1,7 +1,9 @@
-import { useRef } from 'react';
+import { useRef, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { CarModel } from './CarModel';
+import { LoadingCar } from './LoadingCar';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface CarProps {
   color?: string;
@@ -21,57 +23,43 @@ export function Car({
 }: CarProps) {
   const carRef = useRef<THREE.Group>(null);
   const ledLightRef = useRef<THREE.PointLight>(null);
-  
-  // Try to load GLTF model if path provided
-  let model = null;
-  try {
-    if (modelPath) {
-      model = useGLTF(modelPath);
-    }
-  } catch (error) {
-    console.warn('Failed to load model, using fallback geometry', error);
-  }
 
   useFrame(({ clock }) => {
     if (carRef.current) {
       const time = clock.getElapsedTime();
-      
-      // Floating animation (up and down)
       carRef.current.position.y = position[1] + Math.sin(time * 0.8) * 0.15;
-      
-      // Subtle rotation
       carRef.current.rotation.y = rotation[1] + Math.sin(time * 0.3) * 0.05;
     }
     
-    // Pulsating LED light
     if (ledLightRef.current) {
       const time = clock.getElapsedTime();
       ledLightRef.current.intensity = 15 + Math.sin(time * 2) * 8;
     }
   });
 
-  // If model loaded successfully, use it
-  if (model && model.scene) {
+  // If model path provided, try to load it with Suspense fallback
+  if (modelPath) {
     return (
-      <group ref={carRef} position={position}>
-        <primitive 
-          object={model.scene.clone()} 
-          scale={1}
-        />
-        
-        {/* LED light effect under car */}
-        <pointLight
-          ref={ledLightRef}
-          position={[0, -0.5, 0]}
-          color={isSelected ? '#fbbf24' : color}
-          intensity={15}
-          distance={5}
-        />
-      </group>
+      <ErrorBoundary fallback={<LowPolyCar carRef={null} ledLightRef={null} color={color} position={position} rotation={rotation} isSelected={isSelected} />}>
+        <Suspense fallback={<LoadingCar />}>
+          <CarModel 
+            modelPath={modelPath}
+            position={position}
+            rotation={rotation}
+            color={color}
+            isSelected={isSelected}
+          />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
-  // Fallback: Low-poly car geometry
+  // Default: Low-poly car geometry
+  return <LowPolyCar carRef={carRef} ledLightRef={ledLightRef} color={color} position={position} rotation={rotation} isSelected={isSelected} />;
+}
+
+// Low-poly fallback component
+function LowPolyCar({ carRef, ledLightRef, color, position, rotation, isSelected }: any) {
   return (
     <group ref={carRef} position={position} rotation={rotation}>
       {/* Car Body */}

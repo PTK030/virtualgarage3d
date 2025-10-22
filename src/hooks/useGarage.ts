@@ -68,10 +68,46 @@ export function useGarage() {
     reader.readAsArrayBuffer(file);
   };
 
+  const updateCar = (id: number, updates: Partial<CarData>) => {
+    setCars(prev => prev.map(car => 
+      car.id === id ? { ...car, ...updates } : car
+    ));
+  };
+
+  const deleteCar = (id: number) => {
+    setCars(prev => prev.filter(car => car.id !== id));
+    if (selectedCar === id) {
+      setSelectedCar(null);
+    }
+  };
+
+  const resetPosition = (id: number) => {
+    const car = cars.find(c => c.id === id);
+    if (car && car.isCustom) {
+      // Generate new random position for custom models
+      const randomX = (Math.random() - 0.5) * 10;
+      const randomZ = (Math.random() - 0.5) * 8;
+      updateCar(id, { position: [randomX, -1.5, randomZ] });
+    } else {
+      // Reset to original position for default models
+      const originalPositions: { [key: number]: [number, number, number] } = {
+        0: [-6, -1.5, 0],
+        1: [0, -1.5, 0],
+        2: [6, -1.5, 0],
+      };
+      if (originalPositions[id]) {
+        updateCar(id, { position: originalPositions[id] });
+      }
+    }
+  };
+
   return {
     cars,
     selectedCar,
     setSelectedCar,
-    handleFileUpload
+    handleFileUpload,
+    updateCar,
+    deleteCar,
+    resetPosition
   };
 }

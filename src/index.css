@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-display: 'Orbitron', system-ui, sans-serif;
+  --font-sans: 'Rajdhani', system-ui, sans-serif;
 }
 
 * {
@@ -10,10 +11,22 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  position: fixed;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
