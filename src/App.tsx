@@ -1,6 +1,7 @@
 import { Scene3D } from './components/Scene3D';
 import { Header } from './components/Header';
 import { ConfigPanel } from './components/ConfigPanel';
+import { ToastContainer } from './components/ToastContainer';
 import { GarageProvider, useGarageContext } from './contexts/GarageContext';
 import { useRef } from 'react';
 
@@ -14,10 +15,33 @@ function AppContent() {
     deleteCar, 
     resetPosition,
     sceneMode,
-    setSceneMode
+    setSceneMode,
+    saveGarage,
+    clearGarage,
+    toasts,
+    showToast,
+    removeToast
   } = useGarageContext();
   
   const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveGarage = () => {
+    const success = saveGarage();
+    if (success) {
+      showToast('Garage saved successfully!', 'success');
+    } else {
+      showToast('Failed to save garage', 'error');
+    }
+  };
+
+  const handleClearGarage = () => {
+    const success = clearGarage();
+    if (success) {
+      showToast('Garage cleared successfully!', 'success');
+    } else {
+      showToast('Failed to clear garage', 'error');
+    }
+  };
   
   return (
     <div className="relative w-full h-full overflow-hidden bg-black" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
@@ -33,7 +57,10 @@ function AppContent() {
         onUploadClick={() => uploadInputRef.current?.click()}
         sceneMode={sceneMode}
         onSceneModeChange={setSceneMode}
+        onSaveGarage={handleSaveGarage}
+        onClearGarage={handleClearGarage}
       />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <input
         ref={uploadInputRef}
         type="file"

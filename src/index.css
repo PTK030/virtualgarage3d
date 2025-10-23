@@ -30,3 +30,45 @@ html, body {
   top: 0;
   left: 0;
 }
+
+/* Custom scrollbar for Config Panel */
+.config-panel-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.config-panel-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  margin: 8px 0;
+}
+
+.config-panel-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.config-panel-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #7c8ff0 0%, #8a5cb8 100%);
+  box-shadow: 0 0 12px rgba(102, 126, 234, 0.6);
+}
+
+.config-panel-scrollbar::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, #5a6ed8 0%, #6a3f96 100%);
+}
+
+/* Firefox scrollbar */
+.config-panel-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #667eea rgba(255, 255, 255, 0.03);
+}
+
+/* Custom input placeholder styling */
+input[type="text"]::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+input[type="text"]:focus::placeholder {
+  color: rgba(102, 126, 234, 0.6);
+}

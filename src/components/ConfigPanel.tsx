@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type CarData } from '../hooks/useGarage';
 
@@ -12,6 +12,8 @@ interface ConfigPanelProps {
   onUploadClick: () => void;
   sceneMode: 'explore' | 'neon' | 'rain' | 'showroom';
   onSceneModeChange: (mode: 'explore' | 'neon' | 'rain' | 'showroom') => void;
+  onSaveGarage: () => void;
+  onClearGarage: () => void;
 }
 
 export function ConfigPanel({
@@ -23,20 +25,112 @@ export function ConfigPanel({
   onResetPosition,
   onUploadClick,
   sceneMode,
-  onSceneModeChange
+  onSceneModeChange,
+  onSaveGarage,
+  onClearGarage
 }: ConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   const selectedCarData = cars.find(car => car.id === selectedCar);
 
+  // Keyboard shortcut: Escape to close panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
+    <>
+      {/* Toggle button when panel is closed */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            initial={{ x: -100, opacity: 0, scale: 0.5, rotate: -90 }}
+            animate={{ 
+              x: 0, 
+              opacity: 1, 
+              scale: 1, 
+              rotate: 0,
+              boxShadow: [
+                '0 8px 24px rgba(102, 126, 234, 0.4)',
+                '0 8px 28px rgba(102, 126, 234, 0.6)',
+                '0 8px 24px rgba(102, 126, 234, 0.4)',
+              ],
+            }}
+            transition={{
+              x: { type: 'spring', damping: 20, stiffness: 250, delay: 0.15 },
+              opacity: { duration: 0.4, delay: 0.1 },
+              scale: { type: 'spring', damping: 20, stiffness: 250, delay: 0.15 },
+              rotate: { type: 'spring', damping: 20, stiffness: 250, delay: 0.15 },
+              boxShadow: {
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: 0.6
+              }
+            }}
+            exit={{ 
+              x: -100, 
+              opacity: 0, 
+              scale: 0.5, 
+              rotate: 90,
+              transition: {
+                duration: 0.25,
+                ease: 'easeInOut'
+              }
+            }}
+            onClick={() => setIsOpen(true)}
+            style={{
+              position: 'fixed',
+              left: '20px',
+              top: '100px',
+              width: '56px',
+              height: '56px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none',
+              borderRadius: '16px',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '24px',
+              boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
+              zIndex: 10000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.3s',
+            }}
+            whileHover={{ 
+              scale: 1.1, 
+              rotate: 5,
+              boxShadow: '0 12px 32px rgba(102, 126, 234, 0.8)',
+              transition: { duration: 0.2 }
+            }}
+            whileTap={{ scale: 0.9, rotate: -5 }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Config Panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
           initial={{ x: -400, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -400, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="config-panel-scrollbar"
           style={{
             position: 'fixed',
             left: '20px',
@@ -49,7 +143,7 @@ export function ConfigPanel({
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1) inset',
             border: '1px solid rgba(255, 255, 255, 0.05)',
             padding: '24px',
-            zIndex: 900,
+            zIndex: 10000,
             overflowY: 'auto',
             fontFamily: 'Rajdhani, sans-serif',
           }}
@@ -66,8 +160,10 @@ export function ConfigPanel({
             }}>
               CONFIG PANEL
             </h2>
-            <button
+            <motion.button
               onClick={() => setIsOpen(false)}
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: 'none',
@@ -78,18 +174,24 @@ export function ConfigPanel({
                 cursor: 'pointer',
                 fontSize: '20px',
                 transition: 'all 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.color = '#fff';
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                e.currentTarget.style.color = '#ef4444';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                 e.currentTarget.style.color = '#999';
               }}
             >
-              ×
-            </button>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </motion.button>
           </div>
 
           {/* Vehicle List */}
@@ -141,6 +243,42 @@ export function ConfigPanel({
           {selectedCarData && (
             <Section title="EDIT VEHICLE">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Name Input */}
+                <div>
+                  <label style={{ color: '#999', fontSize: '12px', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedCarData.name}
+                    onChange={(e) => onUpdateCar(selectedCarData.id, { name: e.target.value })}
+                    placeholder="Enter vehicle name..."
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontWeight: '500',
+                      outline: 'none',
+                      transition: 'all 0.3s',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.border = '1px solid rgba(102, 126, 234, 0.5)';
+                      e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+
                 {/* Color Picker */}
                 <div>
                   <label style={{ color: '#999', fontSize: '12px', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -233,6 +371,69 @@ export function ConfigPanel({
             </div>
           </Section>
 
+          {/* Garage Actions */}
+          <Section title="GARAGE ACTIONS">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Save Garage */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onSaveGarage}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  transition: 'all 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span>💾</span>
+                Save Garage
+              </motion.button>
+
+              {/* Clear Garage */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onClearGarage}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                  transition: 'all 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span>🧹</span>
+                Clear All
+              </motion.button>
+            </div>
+          </Section>
+
           {/* Upload Button */}
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -252,7 +453,7 @@ export function ConfigPanel({
               letterSpacing: '1px',
               boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
               transition: 'all 0.3s',
-              marginTop: '16px',
+              marginTop: '8px',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.boxShadow = '0 12px 32px rgba(102, 126, 234, 0.6)';
@@ -264,8 +465,9 @@ export function ConfigPanel({
             + Upload New Model
           </motion.button>
         </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

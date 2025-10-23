@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export interface CarData {
   id: number;
@@ -9,32 +9,67 @@ export interface CarData {
   isCustom?: boolean;
 }
 
+const STORAGE_KEY = 'virtualgarage3d_state';
+
+const defaultCars: CarData[] = [
+  { 
+    id: 0, 
+    color: '#3b82f6', 
+    position: [-6, -1.5, 0], 
+    name: 'Mercedes W204 63 AMG',
+    modelPath: '/models/car1.glb'
+  },
+  { 
+    id: 1, 
+    color: '#8b5cf6', 
+    position: [0, -1.5, 0], 
+    name: 'Porsche 911 Turbo S',
+    modelPath: '/models/car2.glb'
+  },
+  { 
+    id: 2, 
+    color: '#06b6d4', 
+    position: [6, -1.5, 0], 
+    name: 'BMW M4 Competition',
+    modelPath: '/models/car3.glb'
+  },
+];
+
 export function useGarage() {
   const [selectedCar, setSelectedCar] = useState<number | null>(null);
   const [customModelCounter, setCustomModelCounter] = useState(1);
-  const [cars, setCars] = useState<CarData[]>([
-    { 
-      id: 0, 
-      color: '#3b82f6', 
-      position: [-6, -1.5, 0], 
-      name: 'Blue Racer',
-      modelPath: '/models/car1.glb'
-    },
-    { 
-      id: 1, 
-      color: '#8b5cf6', 
-      position: [0, -1.5, 0], 
-      name: 'Purple Storm',
-      modelPath: '/models/car2.glb'
-    },
-    { 
-      id: 2, 
-      color: '#06b6d4', 
-      position: [6, -1.5, 0], 
-      name: 'Cyan Flash',
-      modelPath: '/models/car3.glb'
-    },
-  ]);
+  const [cars, setCars] = useState<CarData[]>(defaultCars);
+
+  // Load garage state from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.cars && Array.isArray(parsed.cars)) {
+          setCars(parsed.cars);
+          setCustomModelCounter(parsed.customModelCounter || 1);
+          console.log('✅ Garage loaded from localStorage');
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load garage from localStorage:', error);
+    }
+  }, []);
+
+  // Save garage state to localStorage whenever cars change
+  useEffect(() => {
+    try {
+      const state = {
+        cars,
+        customModelCounter,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.warn('Failed to save garage to localStorage:', error);
+    }
+  }, [cars, customModelCounter]);
 
   const handleFileUpload = (file: File) => {
     const reader = new FileReader();
@@ -90,14 +125,45 @@ export function useGarage() {
       updateCar(id, { position: [randomX, -1.5, randomZ] });
     } else {
       // Reset to original position for default models
-      const originalPositions: { [key: number]: [number, number, number] } = {
-        0: [-6, -1.5, 0],
-        1: [0, -1.5, 0],
-        2: [6, -1.5, 0],
+      const originalData: { [key: number]: { position: [number, number, number], name: string } } = {
+        0: { position: [-6, -1.5, 0], name: 'Mercedes W204 63 AMG' },
+        1: { position: [0, -1.5, 0], name: 'Porsche 911 Turbo S' },
+        2: { position: [6, -1.5, 0], name: 'BMW M4 Competition' },
       };
-      if (originalPositions[id]) {
-        updateCar(id, { position: originalPositions[id] });
+      if (originalData[id]) {
+        updateCar(id, { 
+          position: originalData[id].position,
+          name: originalData[id].name
+        });
       }
+    }
+  };
+
+  const saveGarage = () => {
+    try {
+      const state = {
+        cars,
+        customModelCounter,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return true;
+    } catch (error) {
+      console.error('Failed to save garage:', error);
+      return false;
+    }
+  };
+
+  const clearGarage = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      setCars(defaultCars);
+      setCustomModelCounter(1);
+      setSelectedCar(null);
+      return true;
+    } catch (error) {
+      console.error('Failed to clear garage:', error);
+      return false;
     }
   };
 
@@ -108,6 +174,8 @@ export function useGarage() {
     handleFileUpload,
     updateCar,
     deleteCar,
-    resetPosition
+    resetPosition,
+    saveGarage,
+    clearGarage
   };
 }
