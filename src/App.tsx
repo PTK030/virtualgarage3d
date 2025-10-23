@@ -12,7 +12,9 @@ function AppContent() {
     handleFileUpload, 
     updateCar, 
     deleteCar, 
-    resetPosition 
+    resetPosition,
+    sceneMode,
+    setSceneMode
   } = useGarageContext();
   
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +31,8 @@ function AppContent() {
         onDeleteCar={deleteCar}
         onResetPosition={resetPosition}
         onUploadClick={() => uploadInputRef.current?.click()}
+        sceneMode={sceneMode}
+        onSceneModeChange={setSceneMode}
       />
       <input
         ref={uploadInputRef}

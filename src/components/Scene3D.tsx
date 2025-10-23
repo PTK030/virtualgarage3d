@@ -1,6 +1,32 @@
 import { Canvas } from '@react-three/fiber';
 import { Environment } from '@react-three/drei';
 import { SceneContent } from './SceneContent';
+import { useGarageContext } from '../contexts/GarageContext';
+
+function SceneBackground() {
+  const { sceneMode } = useGarageContext();
+  
+  const backgrounds = {
+    explore: '#0b0b0b',
+    neon: '#0a0a1a',
+    rain: '#0d1520',
+    showroom: '#1a1a1a'
+  };
+  
+  const fogColors = {
+    explore: '#0b0b0b',
+    neon: '#0a0a1a',
+    rain: '#1a2532',
+    showroom: '#1a1a1a'
+  };
+  
+  return (
+    <>
+      <color attach="background" args={[backgrounds[sceneMode]]} />
+      <fog attach="fog" args={[fogColors[sceneMode], 10, 50]} />
+    </>
+  );
+}
 
 export function Scene3D() {
   return (
@@ -10,29 +36,9 @@ export function Scene3D() {
         className="w-full h-full"
         gl={{ alpha: false, antialias: true }}
       >
-      {/* Gradient Background */}
-      <color attach="background" args={['#0b0b0b']} />
+      <SceneBackground />
       
-      {/* Fog for atmospheric depth */}
-      <fog attach="fog" args={['#0b0b0b', 10, 50]} />
-      
-      {/* Lighting Setup */}
-      <ambientLight intensity={1.5} />
-      <spotLight
-        position={[10, 20, 10]}
-        angle={0.3}
-        penumbra={1}
-        intensity={500}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-      />
-      <directionalLight position={[0, 10, 5]} intensity={2} />
-      
-      {/* Point Lights with cool tones */}
-      <pointLight position={[-10, 5, -10]} intensity={50} color="#3b82f6" />
-      <pointLight position={[10, 3, -5]} intensity={40} color="#8b5cf6" />
-      <pointLight position={[0, -2, 5]} intensity={30} color="#06b6d4" />
-      <pointLight position={[-5, 8, 10]} intensity={35} color="#6366f1" />
+      {/* Lighting is now handled by SceneLighting component based on mode */}
       
       <SceneContent />
       

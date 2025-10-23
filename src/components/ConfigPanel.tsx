@@ -10,6 +10,8 @@ interface ConfigPanelProps {
   onDeleteCar: (id: number) => void;
   onResetPosition: (id: number) => void;
   onUploadClick: () => void;
+  sceneMode: 'explore' | 'neon' | 'rain' | 'showroom';
+  onSceneModeChange: (mode: 'explore' | 'neon' | 'rain' | 'showroom') => void;
 }
 
 export function ConfigPanel({
@@ -19,10 +21,11 @@ export function ConfigPanel({
   onUpdateCar,
   onDeleteCar,
   onResetPosition,
-  onUploadClick
+  onUploadClick,
+  sceneMode,
+  onSceneModeChange
 }: ConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(true);
-  const [sceneMode, setSceneMode] = useState<'explore' | 'neon' | 'rain' | 'showroom'>('explore');
 
   const selectedCarData = cars.find(car => car.id === selectedCar);
 
@@ -207,7 +210,7 @@ export function ConfigPanel({
                 <motion.button
                   key={mode}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setSceneMode(mode)}
+                  onClick={() => onSceneModeChange(mode)}
                   style={{
                     padding: '12px',
                     background: sceneMode === mode

@@ -3,10 +3,11 @@ import { useFrame } from '@react-three/fiber';
 import { ParticleField } from './ParticleField';
 import { GradientBackground } from './GradientBackground';
 import { Garage } from './Garage';
+import { SceneLighting } from './SceneLighting';
 import { useGarageContext } from '../contexts/GarageContext';
 
 export function SceneContent() {
-  const { cars, selectedCar, setSelectedCar } = useGarageContext();
+  const { cars, selectedCar, setSelectedCar, sceneMode } = useGarageContext();
   const cameraOffset = useRef({ x: 0, y: 0 });
   
   useFrame(({ camera, clock }) => {
@@ -24,6 +25,9 @@ export function SceneContent() {
     <>
       <GradientBackground />
       <ParticleField />
+      
+      {/* Dynamic lighting based on scene mode */}
+      <SceneLighting mode={sceneMode} />
       
       {/* Garage with cars */}
       <Garage cars={cars} selectedCar={selectedCar} onSelectCar={setSelectedCar} />
