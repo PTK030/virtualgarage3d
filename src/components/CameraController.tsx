@@ -108,7 +108,6 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           const currentDistance = camera.position.distanceTo(new THREE.Vector3(carX, carY, carZ));
           
           // Check if we need to transition - only when manually switching or very far away
-          const carChanged = lastManualCarIndexRef.current !== currentCarIndexRef.current;
           const needsTransition = isTransitioningRef.current || currentDistance > 20;
           
           if (needsTransition) {
