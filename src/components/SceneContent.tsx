@@ -4,10 +4,12 @@ import { ParticleField } from './ParticleField';
 import { GradientBackground } from './GradientBackground';
 import { Garage } from './Garage';
 import { SceneLighting } from './SceneLighting';
+import { CameraController } from './CameraController';
+import { BackgroundLights } from './BackgroundLights';
 import { useGarageContext } from '../contexts/GarageContext';
 
 export function SceneContent() {
-  const { cars, selectedCar, setSelectedCar, sceneMode } = useGarageContext();
+  const { cars, selectedCar, setSelectedCar, sceneMode, cameraMode } = useGarageContext();
   const cameraOffset = useRef({ x: 0, y: 0 });
   
   useFrame(({ camera, clock }) => {
@@ -26,8 +28,14 @@ export function SceneContent() {
       <GradientBackground />
       <ParticleField />
       
+      {/* Camera controller for different modes */}
+      <CameraController mode={cameraMode} cars={cars} />
+      
       {/* Dynamic lighting based on scene mode */}
       <SceneLighting mode={sceneMode} />
+      
+      {/* Pulsating background LED lights */}
+      <BackgroundLights />
       
       {/* Garage with cars */}
       <Garage cars={cars} selectedCar={selectedCar} onSelectCar={setSelectedCar} />

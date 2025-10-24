@@ -2,7 +2,7 @@ import { Car } from './Car';
 import { useGLTF } from '@react-three/drei';
 import { type CarData } from '../hooks/useGarage';
 
-// Preload models
+// Preload models - GLB files first (binary format loads faster)
 useGLTF.preload('/models/car1.glb');
 useGLTF.preload('/models/car2.glb');
 useGLTF.preload('/models/car3.glb');
@@ -25,11 +25,8 @@ export function Garage({ cars, selectedCar, onSelectCar }: GarageProps) {
           onPointerOut={() => document.body.style.cursor = 'default'}
         >
           <Car
-            color={car.color}
-            position={car.position}
-            name={car.name}
+            car={car}
             isSelected={selectedCar === car.id}
-            modelPath={car.modelPath}
           />
         </group>
       ))}

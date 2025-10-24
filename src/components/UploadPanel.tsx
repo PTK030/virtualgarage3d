@@ -11,10 +11,14 @@ export function UploadPanel({ onFileUpload }: UploadPanelProps) {
     const file = event.target.files?.[0];
     if (file) {
       const extension = file.name.toLowerCase();
-      if (extension.endsWith('.glb') || extension.endsWith('.gltf')) {
+      if (extension.endsWith('.glb')) {
+        // GLB files are preferred (binary format, faster loading)
+        onFileUpload(file);
+      } else if (extension.endsWith('.gltf')) {
+        // GLTF files are also supported (JSON format)
         onFileUpload(file);
       } else {
-        alert('Please upload only .glb or .gltf files');
+        alert('Please upload .glb (preferred) or .gltf files');
       }
     }
   };
@@ -34,6 +38,7 @@ export function UploadPanel({ onFileUpload }: UploadPanelProps) {
         accept=".glb,.gltf"
         onChange={handleFileChange}
         style={{ display: 'none' }}
+        title="Upload 3D models (.glb preferred, .gltf supported)"
       />
       
       <button

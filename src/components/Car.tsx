@@ -5,22 +5,19 @@ import { CarModel } from './CarModel';
 import { LoadingCar } from './LoadingCar';
 import { ErrorBoundary } from './ErrorBoundary';
 
+import { type CarData } from '../hooks/useGarage';
+
 interface CarProps {
-  color?: string;
-  position?: [number, number, number];
-  rotation?: [number, number, number];
-  name?: string;
+  car: CarData;
   isSelected?: boolean;
-  modelPath?: string;
 }
 
 export function Car({ 
-  color = '#3b82f6', 
-  position = [0, 0, 0], 
-  rotation = [0, 0, 0],
-  isSelected = false,
-  modelPath
+  car,
+  isSelected = false
 }: CarProps) {
+  const { color = '#3b82f6', position = [0, 0, 0], modelPath } = car;
+  const rotation: [number, number, number] = [0, 0, 0]; // Default rotation
   const carRef = useRef<THREE.Group>(null);
   const ledLightRef = useRef<THREE.PointLight>(null);
 
@@ -43,7 +40,7 @@ export function Car({
       <ErrorBoundary fallback={<LowPolyCar carRef={null} ledLightRef={null} color={color} position={position} rotation={rotation} isSelected={isSelected} />}>
         <Suspense fallback={<LoadingCar />}>
           <CarModel 
-            modelPath={modelPath}
+            car={car}
             position={position}
             rotation={rotation}
             color={color}

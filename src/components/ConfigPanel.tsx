@@ -12,6 +12,8 @@ interface ConfigPanelProps {
   onUploadClick: () => void;
   sceneMode: 'explore' | 'neon' | 'rain' | 'showroom';
   onSceneModeChange: (mode: 'explore' | 'neon' | 'rain' | 'showroom') => void;
+  cameraMode: 'garage' | 'explore';
+  onCameraModeChange: (mode: 'garage' | 'explore') => void;
   onSaveGarage: () => void;
   onClearGarage: () => void;
 }
@@ -26,6 +28,8 @@ export function ConfigPanel({
   onUploadClick,
   sceneMode,
   onSceneModeChange,
+  cameraMode,
+  onCameraModeChange,
   onSaveGarage,
   onClearGarage
 }: ConfigPanelProps) {
@@ -340,6 +344,36 @@ export function ConfigPanel({
               </div>
             </Section>
           )}
+
+          {/* Camera Mode */}
+          <Section title="CAMERA MODE">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {(['garage', 'explore'] as const).map((mode) => (
+                <motion.button
+                  key={mode}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onCameraModeChange(mode)}
+                  style={{
+                    padding: '12px',
+                    background: cameraMode === mode
+                      ? 'linear-gradient(135deg, #10b981, #059669)'
+                      : 'rgba(255, 255, 255, 0.05)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    transition: 'all 0.3s',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  {mode === 'garage' ? '🎮 GARAGE' : '✈️ EXPLORE'}
+                </motion.button>
+              ))}
+            </div>
+          </Section>
 
           {/* Scene Modes */}
           <Section title="SCENE MODE">

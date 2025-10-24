@@ -1,21 +1,24 @@
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { type CarData } from '../hooks/useGarage';
+import { useGLTFWithFallback } from '../hooks/useGLTFWithFallback';
 
 interface CarModelProps {
-  modelPath: string;
+  car: CarData;
   position: [number, number, number];
   rotation: [number, number, number];
   color: string;
   isSelected: boolean;
 }
 
-export function CarModel({ modelPath, position, rotation, color, isSelected }: CarModelProps) {
+export function CarModel({ car, position, rotation, color, isSelected }: CarModelProps) {
   const carRef = useRef<THREE.Group>(null);
   const ledLightRef = useRef<THREE.PointLight>(null);
   
-  const { scene } = useGLTF(modelPath);
+  const { scene, isError } = useGLTFWithFallback(car, color);
+  
+  console.log('🎯 Model result for', car.name, '- Error:', isError);
   
   // Calculate appropriate scale based on model size
   const modelScale = useMemo(() => {
@@ -23,7 +26,7 @@ export function CarModel({ modelPath, position, rotation, color, isSelected }: C
     const size = new THREE.Vector3();
     box.getSize(size);
     
-    console.log('✅ Model loaded:', modelPath, 'at position:', position[0], position[1], position[2]);
+    console.log('✅ Model loaded:', car.name, 'at position:', position[0], position[1], position[2]);
     console.log('Model size:', size.x.toFixed(2), 'x', size.y.toFixed(2), 'x', size.z.toFixed(2));
     
     // Target size: around 6 units long (increased for better visibility)
@@ -34,7 +37,7 @@ export function CarModel({ modelPath, position, rotation, color, isSelected }: C
     console.log('Calculated scale:', calculatedScale.toFixed(2));
     
     return calculatedScale * 1.0; // Apply 1.0 multiplier for final adjustment
-  }, [scene, modelPath, position]);
+  }, [scene, car.name, position]);
 
   useFrame(({ clock }) => {
     if (carRef.current) {
@@ -53,8 +56,10 @@ export function CarModel({ modelPath, position, rotation, color, isSelected }: C
 
   // Make sure model materials receive light and are visible
   const clonedScene = scene.clone();
+  let meshCount = 0;
   clonedScene.traverse((child: any) => {
     if (child.isMesh) {
+      meshCount++;
       child.castShadow = true;
       child.receiveShadow = true;
       
@@ -67,14 +72,16 @@ export function CarModel({ modelPath, position, rotation, color, isSelected }: C
         
         // If it's too dark, add emissive
         if (!child.material.emissive) {
-          child.material.emissive = new THREE.Color(0x222222);
-          child.material.emissiveIntensity = 0.2;
+          child.material.emissive = new THREE.Color(0x333333);
+          child.material.emissiveIntensity = 0.3;
         }
         
         child.material.needsUpdate = true;
       }
     }
   });
+  
+  console.log('🔍 Model processed:', car.name, 'Meshes:', meshCount);
 
   return (
     <group ref={carRef} position={position} rotation={rotation}>

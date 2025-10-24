@@ -7,6 +7,8 @@ export interface CarData {
   name: string;
   modelPath: string;
   isCustom?: boolean;
+  fileData?: string; // base64 encoded file data for custom models
+  fileName?: string; // original file name
 }
 
 const STORAGE_KEY = 'virtualgarage3d_state';
@@ -39,6 +41,7 @@ export function useGarage() {
   const [selectedCar, setSelectedCar] = useState<number | null>(null);
   const [customModelCounter, setCustomModelCounter] = useState(1);
   const [cars, setCars] = useState<CarData[]>(defaultCars);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Load garage state from localStorage on mount
   useEffect(() => {
@@ -49,16 +52,20 @@ export function useGarage() {
         if (parsed.cars && Array.isArray(parsed.cars)) {
           setCars(parsed.cars);
           setCustomModelCounter(parsed.customModelCounter || 1);
-          console.log('✅ Garage loaded from localStorage');
+          console.log('✅ Garage loaded from localStorage:', parsed.cars.length, 'cars');
         }
       }
     } catch (error) {
       console.warn('Failed to load garage from localStorage:', error);
+    } finally {
+      setIsLoaded(true);
     }
   }, []);
 
-  // Save garage state to localStorage whenever cars change
+  // Save garage state to localStorage whenever cars change (but not on initial load)
   useEffect(() => {
+    if (!isLoaded) return; // Don't save during initial load
+    
     try {
       const state = {
         cars,
@@ -66,38 +73,63 @@ export function useGarage() {
         timestamp: Date.now()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      console.log('💾 Garage auto-saved:', cars.length, 'cars');
     } catch (error) {
       console.warn('Failed to save garage to localStorage:', error);
     }
-  }, [cars, customModelCounter]);
+  }, [cars, customModelCounter, isLoaded]);
 
   const handleFileUpload = (file: File) => {
+    // Check file size limit (5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      console.error('❌ File too large:', Math.round(file.size / 1024 / 1024), 'MB. Max size: 5MB');
+      throw new Error(`File too large: ${Math.round(file.size / 1024 / 1024)}MB. Max size: 5MB`);
+    }
+
     const reader = new FileReader();
     
     reader.onload = (event) => {
-      const blob = new Blob([event.target?.result as ArrayBuffer], { type: 'model/gltf-binary' });
-      const url = URL.createObjectURL(blob);
-      
-      // Generate random position
-      const randomX = (Math.random() - 0.5) * 10;
-      const randomZ = (Math.random() - 0.5) * 8;
-      
-      const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ff8c94'];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      
-      const newCar: CarData = {
-        id: Date.now(),
-        color: randomColor,
-        position: [randomX, -1.5, randomZ],
-        name: `Custom Model #${customModelCounter}`,
-        modelPath: url,
-        isCustom: true
-      };
-      
-      setCars(prev => [...prev, newCar]);
-      setCustomModelCounter(prev => prev + 1);
-      
-      console.log('✅ Custom model uploaded:', file.name);
+      try {
+        const arrayBuffer = event.target?.result as ArrayBuffer;
+        
+        // Convert ArrayBuffer to base64 safely (chunk by chunk to avoid stack overflow)
+        const uint8Array = new Uint8Array(arrayBuffer);
+        let binary = '';
+        const chunkSize = 8192; // Process in 8KB chunks
+        
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.subarray(i, i + chunkSize);
+          binary += String.fromCharCode.apply(null, Array.from(chunk));
+        }
+        
+        const base64 = btoa(binary);
+        
+        // Generate random position
+        const randomX = (Math.random() - 0.5) * 10;
+        const randomZ = (Math.random() - 0.5) * 8;
+        
+        const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ff8c94'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        const newCar: CarData = {
+          id: Date.now(),
+          color: randomColor,
+          position: [randomX, -1.5, randomZ],
+          name: `Custom Model #${customModelCounter}`,
+          modelPath: `custom_${Date.now()}`, // placeholder, will be converted to blob URL when needed
+          isCustom: true,
+          fileData: base64,
+          fileName: file.name
+        };
+        
+        setCars(prev => [...prev, newCar]);
+        setCustomModelCounter(prev => prev + 1);
+        
+        console.log('✅ Custom model uploaded and encoded:', file.name, 'Size:', Math.round(base64.length / 1024), 'KB');
+      } catch (error) {
+        console.error('❌ Failed to process file:', error);
+      }
     };
     
     reader.readAsArrayBuffer(file);
@@ -147,9 +179,10 @@ export function useGarage() {
         timestamp: Date.now()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      console.log('💾 Manual save successful:', cars.length, 'cars');
       return true;
     } catch (error) {
-      console.error('Failed to save garage:', error);
+      console.error('❌ Failed to save garage:', error);
       return false;
     }
   };
@@ -160,9 +193,10 @@ export function useGarage() {
       setCars(defaultCars);
       setCustomModelCounter(1);
       setSelectedCar(null);
+      console.log('🧹 Garage cleared, reset to default cars');
       return true;
     } catch (error) {
-      console.error('Failed to clear garage:', error);
+      console.error('❌ Failed to clear garage:', error);
       return false;
     }
   };

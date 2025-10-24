@@ -4,6 +4,7 @@ import { ConfigPanel } from './components/ConfigPanel';
 import { ToastContainer } from './components/ToastContainer';
 import { GarageProvider, useGarageContext } from './contexts/GarageContext';
 import { useRef } from 'react';
+import './utils/debugStorage'; // Enable debug functions
 
 function AppContent() {
   const { 
@@ -16,6 +17,8 @@ function AppContent() {
     resetPosition,
     sceneMode,
     setSceneMode,
+    cameraMode,
+    setCameraMode,
     saveGarage,
     clearGarage,
     toasts,
@@ -42,7 +45,17 @@ function AppContent() {
       showToast('Failed to clear garage', 'error');
     }
   };
-  
+
+  const handleFileUploadWithToast = (file: File) => {
+    try {
+      handleFileUpload(file);
+      showToast(`Model "${file.name}" uploaded successfully!`, 'success');
+    } catch (error) {
+      console.error('Upload error:', error);
+      showToast('Failed to upload model', 'error');
+    }
+  };
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-black" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
       <Scene3D />
@@ -57,6 +70,8 @@ function AppContent() {
         onUploadClick={() => uploadInputRef.current?.click()}
         sceneMode={sceneMode}
         onSceneModeChange={setSceneMode}
+        cameraMode={cameraMode}
+        onCameraModeChange={setCameraMode}
         onSaveGarage={handleSaveGarage}
         onClearGarage={handleClearGarage}
       />
@@ -67,10 +82,16 @@ function AppContent() {
         accept=".glb,.gltf"
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handleFileUpload(file);
+          if (file) {
+            // Log file type for debugging
+            const isGLB = file.name.toLowerCase().endsWith('.glb');
+            console.log(`📁 Uploading ${isGLB ? 'GLB' : 'GLTF'} file:`, file.name, 'Size:', Math.round(file.size / 1024), 'KB');
+            handleFileUploadWithToast(file);
+          }
           e.target.value = '';
         }}
         style={{ display: 'none' }}
+        title="Upload 3D models (.glb preferred for better performance)"
       />
     </div>
   );
