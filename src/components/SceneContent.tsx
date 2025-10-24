@@ -6,10 +6,16 @@ import { Garage } from './Garage';
 import { SceneLighting } from './SceneLighting';
 import { CameraController } from './CameraController';
 import { BackgroundLights } from './BackgroundLights';
+import { NeonLights } from './NeonLights';
+import { RainEffect } from './RainEffect';
+import { DiscoLights } from './DiscoLights';
+import { GravityOffEffect } from './GravityOffEffect';
 import { useGarageContext } from '../contexts/GarageContext';
+import { useEffects } from '../contexts/EffectsContext';
 
 export function SceneContent() {
-  const { cars, selectedCar, setSelectedCar, sceneMode, cameraMode, exploreSubMode } = useGarageContext();
+  const { cars, selectedCar, setSelectedCar, sceneMode, cameraMode, exploreSubMode, updateCar } = useGarageContext();
+  const { effects } = useEffects();
   
   // Handle camera car index changes in explore mode
   const handleCarIndexChange = (index: number) => {
@@ -19,6 +25,15 @@ export function SceneContent() {
       setSelectedCar(car.id);
     }
   };
+
+  // Handle gravity off position updates
+  const handleGravityPositionUpdate = (carId: number, newY: number) => {
+    const car = cars.find(c => c.id === carId);
+    if (car && car.position[1] !== newY) {
+      updateCar(carId, { position: [car.position[0], newY, car.position[2]] });
+    }
+  };
+
   const cameraOffset = useRef({ x: 0, y: 0 });
   
   useFrame(({ camera, clock }) => {
@@ -53,6 +68,16 @@ export function SceneContent() {
       
       {/* Pulsating background LED lights */}
       <BackgroundLights />
+      
+      {/* Special effects */}
+      <NeonLights enabled={effects.neonMode} />
+      <RainEffect enabled={effects.rainMode} count={1000} />
+      <DiscoLights enabled={effects.discoMode} />
+      <GravityOffEffect 
+        enabled={effects.gravityOff} 
+        cars={cars} 
+        onPositionUpdate={handleGravityPositionUpdate} 
+      />
       
       {/* Garage with cars */}
       <Garage cars={cars} selectedCar={selectedCar} onSelectCar={setSelectedCar} />

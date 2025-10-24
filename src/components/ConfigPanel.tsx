@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type CarData } from '../hooks/useGarage';
+import { useEffects } from '../contexts/EffectsContext';
 
 interface ConfigPanelProps {
   cars: CarData[];
@@ -38,6 +39,7 @@ export function ConfigPanel({
   onClearGarage
 }: ConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(true);
+  const { effects, toggleNeon, toggleRain, toggleDisco, toggleGravity } = useEffects();
 
   const selectedCarData = cars.find(car => car.id === selectedCar);
 
@@ -500,6 +502,119 @@ export function ConfigPanel({
                   {mode}
                 </motion.button>
               ))}
+            </div>
+          </Section>
+
+          {/* Special Effects */}
+          <Section title="SPECIAL EFFECTS">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {/* Neon Mode */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleNeon}
+                style={{
+                  padding: '12px',
+                  background: effects.neonMode
+                    ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                    : 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.3s',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                🟣 Neon
+              </motion.button>
+
+              {/* Rain Mode */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleRain}
+                style={{
+                  padding: '12px',
+                  background: effects.rainMode
+                    ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                    : 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.3s',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                🌧️ Rain
+              </motion.button>
+
+              {/* Disco Mode */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleDisco}
+                style={{
+                  padding: '12px',
+                  background: effects.discoMode
+                    ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                    : 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.3s',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                🪩 Disco
+              </motion.button>
+
+              {/* Gravity Off */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleGravity}
+                style={{
+                  padding: '12px',
+                  background: effects.gravityOff
+                    ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                    : 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.3s',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                ☁️ Float
+              </motion.button>
             </div>
           </Section>
 

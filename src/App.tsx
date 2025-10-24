@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { ConfigPanel } from './components/ConfigPanel';
 import { ToastContainer } from './components/ToastContainer';
 import { GarageProvider, useGarageContext } from './contexts/GarageContext';
+import { EffectsProvider } from './contexts/EffectsContext';
 import { useRef } from 'react';
 import './utils/debugStorage'; // Enable debug functions
 
@@ -104,7 +105,9 @@ function AppContent() {
 function App() {
   return (
     <GarageProvider>
-      <AppContent />
+      <EffectsProvider>
+        <AppContent />
+      </EffectsProvider>
     </GarageProvider>
   );
 }
