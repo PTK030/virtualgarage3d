@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type CarData } from '../hooks/useGarage';
 import { useEffects } from '../contexts/EffectsContext';
 import { useAudio } from '../contexts/AudioContext';
+import { CarThumbnail } from './CarThumbnail';
 
 interface ConfigPanelProps {
   cars: CarData[];
@@ -220,37 +221,45 @@ export function ConfigPanel({
                     playSound('select');
                   }}
                   style={{
-                    padding: '12px 16px',
-                    background: selectedCar === car.id 
-                      ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3))'
-                      : 'rgba(255, 255, 255, 0.03)',
+                    padding: '12px',
+                    background: 'transparent',
                     borderRadius: '12px',
                     cursor: 'pointer',
-                    border: selectedCar === car.id 
-                      ? '2px solid rgba(16, 185, 129, 0.8)'
-                      : '1px solid rgba(255, 255, 255, 0.05)',
                     transition: 'all 0.3s ease-in-out',
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    boxShadow: selectedCar === car.id 
-                      ? '0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(16, 185, 129, 0.1)'
-                      : 'none',
-                    transform: selectedCar === car.id ? 'translateX(4px)' : 'translateX(0px)',
+                    flexDirection: 'column',
+                    gap: '8px',
                   }}
                 >
-                  <div style={{
-                    width: selectedCar === car.id ? '16px' : '12px',
-                    height: selectedCar === car.id ? '16px' : '12px',
-                    borderRadius: '50%',
-                    background: car.color,
-                    boxShadow: selectedCar === car.id 
-                      ? `0 0 20px ${car.color}, 0 0 40px ${car.color}40`
-                      : `0 0 8px ${car.color}`,
-                    transition: 'all 0.3s ease-in-out',
-                    border: selectedCar === car.id ? '2px solid white' : 'none',
-                  }} />
-                  <div style={{ flex: 1 }}>
+                  {/* 3D Thumbnail */}
+                  <CarThumbnail 
+                    car={car} 
+                    isSelected={selectedCar === car.id}
+                    onClick={() => {
+                      onSelectCar(car.id);
+                      playSound('select');
+                    }}
+                  />
+                  
+                  {/* Car info below thumbnail */}
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    paddingLeft: '4px'
+                  }}>
+                    <div style={{
+                      width: selectedCar === car.id ? '12px' : '10px',
+                      height: selectedCar === car.id ? '12px' : '10px',
+                      borderRadius: '50%',
+                      background: car.color,
+                      boxShadow: selectedCar === car.id 
+                        ? `0 0 16px ${car.color}, 0 0 32px ${car.color}40`
+                        : `0 0 6px ${car.color}`,
+                      transition: 'all 0.3s ease-in-out',
+                      border: selectedCar === car.id ? '2px solid white' : 'none',
+                    }} />
+                    <div style={{ flex: 1 }}>
                     <div style={{ 
                       color: selectedCar === car.id ? '#10b981' : 'white', 
                       fontSize: '16px', 
@@ -270,7 +279,7 @@ export function ConfigPanel({
                       </div>
                     )}
                   </div>
-                  {selectedCar === car.id && (
+                    {selectedCar === car.id && (
                     <motion.div
                       initial={{ scale: 0, rotate: 0 }}
                       animate={{ scale: 1, rotate: 360 }}
@@ -291,6 +300,7 @@ export function ConfigPanel({
                       </svg>
                     </motion.div>
                   )}
+                  </div>
                 </motion.div>
               ))}
             </div>
