@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type CarData } from '../hooks/useGarage';
 import { useEffects } from '../contexts/EffectsContext';
+import { useAudio } from '../contexts/AudioContext';
 
 interface ConfigPanelProps {
   cars: CarData[];
@@ -40,6 +41,7 @@ export function ConfigPanel({
 }: ConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(true);
   const { effects, toggleNeon, toggleRain, toggleDisco, toggleGravity } = useEffects();
+  const { isEnabled, volume, toggleAudio, setVolume, playSound } = useAudio();
 
   const selectedCarData = cars.find(car => car.id === selectedCar);
 
@@ -213,7 +215,10 @@ export function ConfigPanel({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
-                  onClick={() => onSelectCar(car.id)}
+                  onClick={() => {
+                    onSelectCar(car.id);
+                    playSound('select');
+                  }}
                   style={{
                     padding: '12px 16px',
                     background: selectedCar === car.id 
@@ -511,7 +516,10 @@ export function ConfigPanel({
               {/* Neon Mode */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={toggleNeon}
+                onClick={() => {
+                  toggleNeon();
+                  playSound('click');
+                }}
                 style={{
                   padding: '12px',
                   background: effects.neonMode
@@ -538,7 +546,10 @@ export function ConfigPanel({
               {/* Rain Mode */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={toggleRain}
+                onClick={() => {
+                  toggleRain();
+                  playSound('click');
+                }}
                 style={{
                   padding: '12px',
                   background: effects.rainMode
@@ -565,7 +576,10 @@ export function ConfigPanel({
               {/* Disco Mode */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={toggleDisco}
+                onClick={() => {
+                  toggleDisco();
+                  playSound('click');
+                }}
                 style={{
                   padding: '12px',
                   background: effects.discoMode
@@ -592,7 +606,10 @@ export function ConfigPanel({
               {/* Gravity Off */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={toggleGravity}
+                onClick={() => {
+                  toggleGravity();
+                  playSound('click');
+                }}
                 style={{
                   padding: '12px',
                   background: effects.gravityOff
@@ -615,6 +632,75 @@ export function ConfigPanel({
               >
                 ☁️ Float
               </motion.button>
+            </div>
+          </Section>
+
+          {/* Audio Controls */}
+          <Section title="AUDIO SETTINGS">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Audio Toggle */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  toggleAudio();
+                  playSound('click');
+                }}
+                style={{
+                  padding: '12px',
+                  background: isEnabled
+                    ? 'linear-gradient(135deg, #10b981, #059669)'
+                    : 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.3s',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+              >
+                {isEnabled ? '🔊 Audio On' : '🔇 Audio Off'}
+              </motion.button>
+
+              {/* Volume Slider */}
+              {isEnabled && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    color: '#999',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>
+                    <span>Volume</span>
+                    <span>{Math.round(volume * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volume * 100}
+                    onChange={(e) => setVolume(Number(e.target.value) / 100)}
+                    style={{
+                      width: '100%',
+                      height: '6px',
+                      borderRadius: '3px',
+                      outline: 'none',
+                      background: `linear-gradient(to right, #667eea ${volume * 100}%, rgba(255, 255, 255, 0.1) ${volume * 100}%)`,
+                      cursor: 'pointer',
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </Section>
 
