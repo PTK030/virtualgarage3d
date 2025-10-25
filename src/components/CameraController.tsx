@@ -64,8 +64,11 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
             currentCarIndexRef.current = (currentCarIndexRef.current - 1 + cameraPath.length) % cameraPath.length;
             lastManualCarIndexRef.current = currentCarIndexRef.current;
             isTransitioningRef.current = true; // Force camera transition
-            console.log('🎯 Manual switching to car:', cameraPath[currentCarIndexRef.current].carName, 'Index:', currentCarIndexRef.current);
-            onCarIndexChange?.(currentCarIndexRef.current);
+            const leftCar = cameraPath[currentCarIndexRef.current];
+            if (leftCar && leftCar.carName) {
+              console.log('🎯 Manual switching to car:', leftCar.carName, 'Index:', currentCarIndexRef.current);
+              onCarIndexChange?.(currentCarIndexRef.current);
+            }
             break;
           case 'ArrowRight':
           case 'd':
@@ -73,8 +76,11 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
             currentCarIndexRef.current = (currentCarIndexRef.current + 1) % cameraPath.length;
             lastManualCarIndexRef.current = currentCarIndexRef.current;
             isTransitioningRef.current = true; // Force camera transition
-            console.log('🎯 Manual switching to car:', cameraPath[currentCarIndexRef.current].carName, 'Index:', currentCarIndexRef.current);
-            onCarIndexChange?.(currentCarIndexRef.current);
+            const rightCar = cameraPath[currentCarIndexRef.current];
+            if (rightCar && rightCar.carName) {
+              console.log('🎯 Manual switching to car:', rightCar.carName, 'Index:', currentCarIndexRef.current);
+              onCarIndexChange?.(currentCarIndexRef.current);
+            }
             break;
         }
       };
@@ -98,47 +104,51 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
     if (mode === 'explore') {
       if (exploreSubMode === 'manual') {
         // Manual mode - smooth transitions between cars
-        if (cameraPath.length > 0) {
+        if (cameraPath && cameraPath.length > 0 && cameraPath[currentCarIndexRef.current]) {
           const currentCar = cameraPath[currentCarIndexRef.current];
-          const [carX, carY, carZ] = currentCar.lookAt;
-          
-          // Set target position for current car
-          const idealDistance = 8;
-          const idealHeight = 5;
-          const currentDistance = camera.position.distanceTo(new THREE.Vector3(carX, carY, carZ));
-          
-          // Check if we need to transition - only when manually switching or very far away
-          const needsTransition = isTransitioningRef.current || currentDistance > 20;
-          
-          if (needsTransition) {
-            // Update last manual car index
-            lastManualCarIndexRef.current = currentCarIndexRef.current;
+          if (currentCar && currentCar.lookAt) {
+            const [carX, carY, carZ] = currentCar.lookAt;
             
-            // Disable OrbitControls during transition
-            if (orbitControlsRef.current) {
-              orbitControlsRef.current.enabled = false;
-            }
+            // Set target position for current car
+            const idealDistance = 8;
+            const idealHeight = 5;
+            const currentDistance = camera.position.distanceTo(new THREE.Vector3(carX, carY, carZ));
             
-            // Set new target position
-            targetPositionRef.current.set(carX + idealDistance, carY + idealHeight, carZ + idealDistance);
-            targetLookAtRef.current.set(carX, carY + 0.5, carZ);
+            // Check if we need to transition - only when manually switching or very far away
+            const needsTransition = isTransitioningRef.current || currentDistance > 20;
             
-            // Smooth transition to new car
-            camera.position.lerp(targetPositionRef.current, delta * 3);
-            camera.lookAt(targetLookAtRef.current);
-            
-            // Check if transition is complete
-            const newDistance = camera.position.distanceTo(targetPositionRef.current);
-            if (newDistance < 1.5) {
-              isTransitioningRef.current = false;
-              console.log('✅ Transition complete to:', currentCar.carName);
+            if (needsTransition) {
+              // Update last manual car index
+              lastManualCarIndexRef.current = currentCarIndexRef.current;
+              
+              // Disable OrbitControls during transition
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.enabled = false;
+              }
+              
+              // Set new target position
+              targetPositionRef.current.set(carX + idealDistance, carY + idealHeight, carZ + idealDistance);
+              targetLookAtRef.current.set(carX, carY + 0.5, carZ);
+              
+              // Smooth transition to new car
+              camera.position.lerp(targetPositionRef.current, delta * 3);
+              camera.lookAt(targetLookAtRef.current);
+              
+              // Check if transition is complete
+              const newDistance = camera.position.distanceTo(targetPositionRef.current);
+              if (newDistance < 1.5) {
+                isTransitioningRef.current = false;
+                console.log('✅ Transition complete to:', currentCar.carName);
+              }
+            } else {
+              // Enable OrbitControls when not transitioning
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.enabled = true;
+                orbitControlsRef.current.target.set(carX, carY + 0.5, carZ);
+              }
             }
           } else {
-            // Enable OrbitControls when not transitioning
-            if (orbitControlsRef.current) {
-              orbitControlsRef.current.enabled = true;
-              orbitControlsRef.current.target.set(carX, carY + 0.5, carZ);
-            }
+            console.warn('⚠️ Invalid car data in manual mode:', currentCarIndexRef.current);
           }
         }
       } else {
@@ -147,7 +157,7 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           orbitControlsRef.current.enabled = false;
         }
 
-        if (cameraPath.length > 0) {
+        if (cameraPath && cameraPath.length > 0) {
           exploreTimeRef.current += delta * 0.4;
           
           const pathLength = cameraPath.length;
@@ -158,70 +168,78 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           const currentIndex = Math.floor(scaledProgress) % pathLength;
           const t = scaledProgress - Math.floor(scaledProgress);
           
-          // Update current car index for display
-          if (currentCarIndexRef.current !== currentIndex) {
-            currentCarIndexRef.current = currentIndex;
+          // Ensure currentIndex is valid and car exists
+          if (currentIndex >= 0 && currentIndex < cameraPath.length) {
             const currentCar = cameraPath[currentIndex];
-            console.log('🎯 Auto viewing car:', currentCar.carName, 'ID:', currentCar.carId, 'Index:', currentIndex, 'Time:', exploreTimeRef.current.toFixed(2));
-            onCarIndexChange?.(currentIndex);
-          }
-          
-          // Get current car position
-          const currentCar = cameraPath[currentIndex];
-          const [carX, carY, carZ] = currentCar.lookAt;
-          
-          // Multi-phase camera movement for each car
-          const phase1Duration = 0.3; // 30% - approach and circle
-          const phase2Duration = 0.4; // 40% - detailed inspection
-          const phase3Duration = 0.3; // 30% - departure
-          
-          let cameraX, cameraY, cameraZ;
-          
-          if (t < phase1Duration) {
-            // Phase 1: Approach and start circling
-            const phaseT = t / phase1Duration;
-            const easeT = phaseT * phaseT * (3 - 2 * phaseT); // Smooth step
-            
-            const angle = easeT * Math.PI * 0.5; // Quarter circle approach
-            const radius = 12 - easeT * 4; // Start far, get closer
-            const height = 6 + easeT * 2; // Rise up
-            
-            cameraX = carX + Math.cos(angle) * radius;
-            cameraY = carY + height;
-            cameraZ = carZ + Math.sin(angle) * radius;
-            
-          } else if (t < phase1Duration + phase2Duration) {
-            // Phase 2: Detailed inspection - slow orbit
-            const phaseT = (t - phase1Duration) / phase2Duration;
-            const angle = Math.PI * 0.5 + phaseT * Math.PI * 1.2; // Continue orbiting
-            const radius = 8 + Math.sin(phaseT * Math.PI * 2) * 1; // Slight radius variation
-            const height = 8 + Math.sin(phaseT * Math.PI * 3) * 0.8; // Gentle height variation
-            
-            cameraX = carX + Math.cos(angle) * radius;
-            cameraY = carY + height;
-            cameraZ = carZ + Math.sin(angle) * radius;
-            
+            if (currentCar && currentCar.carName && currentCar.lookAt) {
+              // Update current car index for display
+              if (currentCarIndexRef.current !== currentIndex) {
+                currentCarIndexRef.current = currentIndex;
+                console.log('🎯 Auto viewing car:', currentCar.carName, 'ID:', currentCar.carId, 'Index:', currentIndex, 'Time:', exploreTimeRef.current.toFixed(2));
+                onCarIndexChange?.(currentIndex);
+              }
+              
+              // Get current car position
+              const [carX, carY, carZ] = currentCar.lookAt;
+              
+              // Multi-phase camera movement for each car
+              const phase1Duration = 0.3; // 30% - approach and circle
+              const phase2Duration = 0.4; // 40% - detailed inspection
+              const phase3Duration = 0.3; // 30% - departure
+              
+              let cameraX, cameraY, cameraZ;
+              
+              if (t < phase1Duration) {
+                // Phase 1: Approach and start circling
+                const phaseT = t / phase1Duration;
+                const easeT = phaseT * phaseT * (3 - 2 * phaseT); // Smooth step
+                
+                const angle = easeT * Math.PI * 0.5; // Quarter circle approach
+                const radius = 12 - easeT * 4; // Start far, get closer
+                const height = 6 + easeT * 2; // Rise up
+                
+                cameraX = carX + Math.cos(angle) * radius;
+                cameraY = carY + height;
+                cameraZ = carZ + Math.sin(angle) * radius;
+                
+              } else if (t < phase1Duration + phase2Duration) {
+                // Phase 2: Detailed inspection - slow orbit
+                const phaseT = (t - phase1Duration) / phase2Duration;
+                const angle = Math.PI * 0.5 + phaseT * Math.PI * 1.2; // Continue orbiting
+                const radius = 8 + Math.sin(phaseT * Math.PI * 2) * 1; // Slight radius variation
+                const height = 8 + Math.sin(phaseT * Math.PI * 3) * 0.8; // Gentle height variation
+                
+                cameraX = carX + Math.cos(angle) * radius;
+                cameraY = carY + height;
+                cameraZ = carZ + Math.sin(angle) * radius;
+                
+              } else {
+                // Phase 3: Departure - move away smoothly
+                const phaseT = (t - phase1Duration - phase2Duration) / phase3Duration;
+                const easeT = 1 - (1 - phaseT) * (1 - phaseT); // Ease out
+                
+                const angle = Math.PI * 1.7 + easeT * Math.PI * 0.3; // Complete the circle
+                const radius = 8 + easeT * 6; // Move away
+                const height = 8 - easeT * 2; // Lower down
+                
+                cameraX = carX + Math.cos(angle) * radius;
+                cameraY = carY + height;
+                cameraZ = carZ + Math.sin(angle) * radius;
+              }
+              
+              // Set target position
+              targetPositionRef.current.set(cameraX, cameraY, cameraZ);
+              targetLookAtRef.current.set(carX, carY + 0.5, carZ);
+              
+              // Smooth camera movement
+              camera.position.lerp(targetPositionRef.current, delta * 1.5);
+              camera.lookAt(targetLookAtRef.current);
+            } else {
+              console.warn('⚠️ Invalid car at index during update:', currentIndex, currentCar);
+            }
           } else {
-            // Phase 3: Departure - move away smoothly
-            const phaseT = (t - phase1Duration - phase2Duration) / phase3Duration;
-            const easeT = 1 - (1 - phaseT) * (1 - phaseT); // Ease out
-            
-            const angle = Math.PI * 1.7 + easeT * Math.PI * 0.3; // Complete the circle
-            const radius = 8 + easeT * 6; // Move away
-            const height = 8 - easeT * 2; // Lower down
-            
-            cameraX = carX + Math.cos(angle) * radius;
-            cameraY = carY + height;
-            cameraZ = carZ + Math.sin(angle) * radius;
+            console.warn('⚠️ Invalid camera path index:', currentIndex, 'Path length:', cameraPath.length);
           }
-          
-          // Set target position
-          targetPositionRef.current.set(cameraX, cameraY, cameraZ);
-          targetLookAtRef.current.set(carX, carY + 0.5, carZ);
-          
-          // Smooth camera movement
-          camera.position.lerp(targetPositionRef.current, delta * 1.5);
-          camera.lookAt(targetLookAtRef.current);
         }
       }
     } else {
@@ -249,7 +267,7 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
       currentCarIndexRef.current = 0;
       lastManualCarIndexRef.current = 0;
       isTransitioningRef.current = true; // Force initial transition
-      if (cameraPath.length > 0) {
+      if (cameraPath.length > 0 && cameraPath[0] && cameraPath[0].carName) {
         console.log('🎯 Starting explore mode with car:', cameraPath[0].carName, 'Reset time to:', exploreTimeRef.current);
         // Immediately sync UI to first car
         onCarIndexChange?.(0);

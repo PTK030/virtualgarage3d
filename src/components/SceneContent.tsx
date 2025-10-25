@@ -10,6 +10,7 @@ import { NeonLights } from './NeonLights';
 import { RainEffect } from './RainEffect';
 import { DiscoLights } from './DiscoLights';
 import { GravityOffEffect } from './GravityOffEffect';
+import { ShowroomScene } from './ShowroomScene';
 import { useGarageContext } from '../contexts/GarageContext';
 import { useEffects } from '../contexts/EffectsContext';
 
@@ -50,6 +51,15 @@ export function SceneContent() {
     }
   });
 
+  // Showroom Mode - single car presentation
+  if (sceneMode === 'showroom') {
+    const selectedCarData = cars.find(car => car.id === selectedCar);
+    return (
+      <ShowroomScene car={selectedCarData || cars[0] || null} />
+    );
+  }
+
+  // Normal garage mode
   return (
     <>
       <GradientBackground />
