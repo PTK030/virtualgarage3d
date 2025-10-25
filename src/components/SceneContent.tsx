@@ -10,6 +10,13 @@ import { useGarageContext } from '../contexts/GarageContext';
 
 export function SceneContent() {
   const { cars, selectedCar, setSelectedCar, sceneMode, cameraMode, exploreSubMode } = useGarageContext();
+  
+  // Handle camera car index changes in explore mode
+  const handleCarIndexChange = (index: number) => {
+    if (cameraMode === 'explore' && cars[index]) {
+      setSelectedCar(cars[index].id);
+    }
+  };
   const cameraOffset = useRef({ x: 0, y: 0 });
   
   useFrame(({ camera, clock }) => {
@@ -32,7 +39,12 @@ export function SceneContent() {
       <ParticleField />
       
       {/* Camera controller for different modes */}
-      <CameraController mode={cameraMode} exploreSubMode={exploreSubMode} cars={cars} />
+      <CameraController 
+        mode={cameraMode} 
+        exploreSubMode={exploreSubMode} 
+        cars={cars} 
+        onCarIndexChange={handleCarIndexChange}
+      />
       
       {/* Dynamic lighting based on scene mode */}
       <SceneLighting mode={sceneMode} />

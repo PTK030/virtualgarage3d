@@ -208,40 +208,82 @@ export function ConfigPanel({
               {cars.map((car) => (
                 <motion.div
                   key={car.id}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
                   onClick={() => onSelectCar(car.id)}
                   style={{
                     padding: '12px 16px',
                     background: selectedCar === car.id 
-                      ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))'
+                      ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3))'
                       : 'rgba(255, 255, 255, 0.03)',
                     borderRadius: '12px',
                     cursor: 'pointer',
                     border: selectedCar === car.id 
-                      ? '1px solid rgba(102, 126, 234, 0.5)'
+                      ? '2px solid rgba(16, 185, 129, 0.8)'
                       : '1px solid rgba(255, 255, 255, 0.05)',
-                    transition: 'all 0.3s',
+                    transition: 'all 0.3s ease-in-out',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
+                    boxShadow: selectedCar === car.id 
+                      ? '0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(16, 185, 129, 0.1)'
+                      : 'none',
+                    transform: selectedCar === car.id ? 'translateX(4px)' : 'translateX(0px)',
                   }}
                 >
                   <div style={{
-                    width: '12px',
-                    height: '12px',
+                    width: selectedCar === car.id ? '16px' : '12px',
+                    height: selectedCar === car.id ? '16px' : '12px',
                     borderRadius: '50%',
                     background: car.color,
-                    boxShadow: `0 0 12px ${car.color}`,
+                    boxShadow: selectedCar === car.id 
+                      ? `0 0 20px ${car.color}, 0 0 40px ${car.color}40`
+                      : `0 0 8px ${car.color}`,
+                    transition: 'all 0.3s ease-in-out',
+                    border: selectedCar === car.id ? '2px solid white' : 'none',
                   }} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: 'white', fontSize: '16px', fontWeight: '600' }}>
+                    <div style={{ 
+                      color: selectedCar === car.id ? '#10b981' : 'white', 
+                      fontSize: '16px', 
+                      fontWeight: selectedCar === car.id ? '700' : '600',
+                      transition: 'all 0.3s ease-in-out',
+                      textShadow: selectedCar === car.id ? '0 0 10px rgba(16, 185, 129, 0.5)' : 'none'
+                    }}>
                       {car.name}
                     </div>
                     {car.isCustom && (
-                      <div style={{ color: '#999', fontSize: '12px' }}>Custom Model</div>
+                      <div style={{ 
+                        color: selectedCar === car.id ? '#6ee7b7' : '#999', 
+                        fontSize: '12px',
+                        transition: 'all 0.3s ease-in-out'
+                      }}>
+                        Custom Model
+                      </div>
                     )}
                   </div>
+                  {selectedCar === car.id && (
+                    <motion.div
+                      initial={{ scale: 0, rotate: 0 }}
+                      animate={{ scale: 1, rotate: 360 }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 0 15px rgba(16, 185, 129, 0.6)'
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                        <path d="M9 12l2 2 4-4" />
+                      </svg>
+                    </motion.div>
+                  )}
                 </motion.div>
               ))}
             </div>
@@ -416,16 +458,17 @@ export function ConfigPanel({
                     </motion.button>
                   ))}
                 </div>
-                {exploreSubMode === 'manual' && (
-                  <div style={{ 
-                    fontSize: '11px', 
-                    color: 'rgba(255, 255, 255, 0.6)', 
-                    marginTop: '8px',
-                    lineHeight: '1.4'
-                  }}>
-                    Use ← → arrows or A/D keys to switch between cars
-                  </div>
-                )}
+                <div style={{ 
+                  fontSize: '11px', 
+                  color: 'rgba(255, 255, 255, 0.6)', 
+                  marginTop: '8px',
+                  lineHeight: '1.4'
+                }}>
+                  {exploreSubMode === 'manual' 
+                    ? 'Use ← → arrows or A/D keys to switch between cars'
+                    : 'Camera automatically tours each car for 8 seconds'
+                  }
+                </div>
               </div>
             )}
           </Section>
