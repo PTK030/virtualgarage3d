@@ -3,13 +3,17 @@ import { Header } from './components/Header';
 import { ConfigPanel } from './components/ConfigPanel';
 import { ToastContainer } from './components/ToastContainer';
 import { AmbientAudio } from './components/AmbientAudio';
+import { IntroScreen } from './components/IntroScreen';
 import { GarageProvider, useGarageContext } from './contexts/GarageContext';
 import { EffectsProvider } from './contexts/EffectsContext';
 import { AudioProvider } from './contexts/AudioContext';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './utils/debugStorage'; // Enable debug functions
 
 function AppContent() {
+  const [showIntro, setShowIntro] = useState(true);
+  
   const { 
     cars, 
     selectedCar, 
@@ -32,6 +36,12 @@ function AppContent() {
   } = useGarageContext();
   
   const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  const handleIntroComplete = () => {
+    setTimeout(() => {
+      setShowIntro(false);
+    }, 1000);
+  };
 
   const handleSaveGarage = () => {
     const success = saveGarage();
@@ -62,10 +72,29 @@ function AppContent() {
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-black" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
-      <Scene3D />
-      <AmbientAudio mode={sceneMode === 'showroom' ? 'showroom' : cameraMode === 'explore' ? 'explore' : 'garage'} />
-      <Header />
+    <>
+      <AnimatePresence>
+        {showIntro && (
+          <IntroScreen onComplete={handleIntroComplete} />
+        )}
+      </AnimatePresence>
+
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showIntro ? 0 : 1 }}
+        transition={{ duration: 1, delay: 0.5 }}
+        className="relative w-full h-full overflow-hidden bg-black" 
+        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
+      >
+        <Scene3D />
+        <AmbientAudio mode={sceneMode === 'showroom' ? 'showroom' : cameraMode === 'explore' ? 'explore' : 'garage'} />
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: showIntro ? 0 : 1, y: showIntro ? -20 : 0 }}
+          transition={{ duration: 0.6, delay: 1 }}
+        >
+          <Header />
+        </motion.div>
       <ConfigPanel
         cars={cars}
         selectedCar={selectedCar}
@@ -101,7 +130,8 @@ function AppContent() {
         style={{ display: 'none' }}
         title="Upload 3D models (.glb preferred for better performance)"
       />
-    </div>
+      </motion.div>
+    </>
   );
 }
 
