@@ -19,6 +19,7 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
   const currentCarIndexRef = useRef(0);
   const targetPositionRef = useRef(new THREE.Vector3(0, 3, 12));
   const targetLookAtRef = useRef(new THREE.Vector3(0, 0, 0));
+  const isTransitioningRef = useRef(false);
 
   // Generate camera positions based on actual car positions
   const generateCameraPath = () => {
@@ -59,6 +60,7 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           case 'a':
           case 'A':
             currentCarIndexRef.current = (currentCarIndexRef.current - 1 + cameraPath.length) % cameraPath.length;
+            isTransitioningRef.current = true; // Force camera transition
             console.log('🎯 Manual switching to car:', cameraPath[currentCarIndexRef.current].carName, 'Index:', currentCarIndexRef.current);
             onCarIndexChange?.(currentCarIndexRef.current);
             break;
@@ -66,6 +68,7 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           case 'd':
           case 'D':
             currentCarIndexRef.current = (currentCarIndexRef.current + 1) % cameraPath.length;
+            isTransitioningRef.current = true; // Force camera transition
             console.log('🎯 Manual switching to car:', cameraPath[currentCarIndexRef.current].carName, 'Index:', currentCarIndexRef.current);
             onCarIndexChange?.(currentCarIndexRef.current);
             break;
@@ -100,20 +103,37 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           const idealHeight = 5;
           const currentDistance = camera.position.distanceTo(new THREE.Vector3(carX, carY, carZ));
           
-          // If camera is too far or we just switched cars, move to ideal position
-          if (currentDistance > 15 || Math.abs(targetPositionRef.current.x - (carX + idealDistance)) > 2) {
+          // Check if we need to transition (either too far or manual switch)
+          const needsTransition = currentDistance > 15 || 
+                                 isTransitioningRef.current || 
+                                 Math.abs(targetPositionRef.current.x - (carX + idealDistance)) > 3;
+          
+          if (needsTransition) {
+            // Disable OrbitControls during transition
+            if (orbitControlsRef.current) {
+              orbitControlsRef.current.enabled = false;
+            }
+            
+            // Set new target position
             targetPositionRef.current.set(carX + idealDistance, carY + idealHeight, carZ + idealDistance);
             targetLookAtRef.current.set(carX, carY + 0.5, carZ);
             
             // Smooth transition to new car
-            camera.position.lerp(targetPositionRef.current, delta * 2);
+            camera.position.lerp(targetPositionRef.current, delta * 3);
             camera.lookAt(targetLookAtRef.current);
-          }
-          
-          // Enable OrbitControls after positioning
-          if (orbitControlsRef.current) {
-            orbitControlsRef.current.enabled = true;
-            orbitControlsRef.current.target.set(carX, carY + 0.5, carZ);
+            
+            // Check if transition is complete
+            const newDistance = camera.position.distanceTo(targetPositionRef.current);
+            if (newDistance < 1) {
+              isTransitioningRef.current = false;
+              console.log('✅ Transition complete to:', currentCar.carName);
+            }
+          } else {
+            // Enable OrbitControls when not transitioning
+            if (orbitControlsRef.current) {
+              orbitControlsRef.current.enabled = true;
+              orbitControlsRef.current.target.set(carX, carY + 0.5, carZ);
+            }
           }
         }
       } else {
@@ -215,10 +235,12 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
       targetLookAtRef.current.set(0, 0, 0);
       exploreTimeRef.current = 0;
       currentCarIndexRef.current = 0;
+      isTransitioningRef.current = false;
     } else if (mode === 'explore') {
       // Reset explore mode
       exploreTimeRef.current = 0;
       currentCarIndexRef.current = 0;
+      isTransitioningRef.current = true; // Force initial transition
       if (cameraPath.length > 0) {
         console.log('🎯 Starting explore mode with car:', cameraPath[0].carName);
       }
