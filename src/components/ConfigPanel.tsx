@@ -14,6 +14,8 @@ interface ConfigPanelProps {
   onSceneModeChange: (mode: 'explore' | 'neon' | 'rain' | 'showroom') => void;
   cameraMode: 'garage' | 'explore';
   onCameraModeChange: (mode: 'garage' | 'explore') => void;
+  exploreSubMode: 'auto' | 'manual';
+  onExploreSubModeChange: (mode: 'auto' | 'manual') => void;
   onSaveGarage: () => void;
   onClearGarage: () => void;
 }
@@ -30,6 +32,8 @@ export function ConfigPanel({
   onSceneModeChange,
   cameraMode,
   onCameraModeChange,
+  exploreSubMode,
+  onExploreSubModeChange,
   onSaveGarage,
   onClearGarage
 }: ConfigPanelProps) {
@@ -347,7 +351,7 @@ export function ConfigPanel({
 
           {/* Camera Mode */}
           <Section title="CAMERA MODE">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
               {(['garage', 'explore'] as const).map((mode) => (
                 <motion.button
                   key={mode}
@@ -373,6 +377,57 @@ export function ConfigPanel({
                 </motion.button>
               ))}
             </div>
+            
+            {/* Explore Sub-Mode */}
+            {cameraMode === 'explore' && (
+              <div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: 'rgba(255, 255, 255, 0.7)', 
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  Explore Control
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  {(['auto', 'manual'] as const).map((subMode) => (
+                    <motion.button
+                      key={subMode}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => onExploreSubModeChange(subMode)}
+                      style={{
+                        padding: '10px',
+                        background: exploreSubMode === subMode
+                          ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+                          : 'rgba(255, 255, 255, 0.05)',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        textTransform: 'uppercase',
+                        transition: 'all 0.3s',
+                        letterSpacing: '0.5px',
+                      }}
+                    >
+                      {subMode === 'auto' ? '🤖 AUTO' : '🎮 MANUAL'}
+                    </motion.button>
+                  ))}
+                </div>
+                {exploreSubMode === 'manual' && (
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: 'rgba(255, 255, 255, 0.6)', 
+                    marginTop: '8px',
+                    lineHeight: '1.4'
+                  }}>
+                    Use ← → arrows or A/D keys to switch between cars
+                  </div>
+                )}
+              </div>
+            )}
           </Section>
 
           {/* Scene Modes */}

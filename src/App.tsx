@@ -19,6 +19,8 @@ function AppContent() {
     setSceneMode,
     cameraMode,
     setCameraMode,
+    exploreSubMode,
+    setExploreSubMode,
     saveGarage,
     clearGarage,
     toasts,
@@ -72,6 +74,8 @@ function AppContent() {
         onSceneModeChange={setSceneMode}
         cameraMode={cameraMode}
         onCameraModeChange={setCameraMode}
+        exploreSubMode={exploreSubMode}
+        onExploreSubModeChange={setExploreSubMode}
         onSaveGarage={handleSaveGarage}
         onClearGarage={handleClearGarage}
       />

@@ -9,18 +9,21 @@ import { BackgroundLights } from './BackgroundLights';
 import { useGarageContext } from '../contexts/GarageContext';
 
 export function SceneContent() {
-  const { cars, selectedCar, setSelectedCar, sceneMode, cameraMode } = useGarageContext();
+  const { cars, selectedCar, setSelectedCar, sceneMode, cameraMode, exploreSubMode } = useGarageContext();
   const cameraOffset = useRef({ x: 0, y: 0 });
   
   useFrame(({ camera, clock }) => {
-    // Smooth sinusoidal camera movement
-    const time = clock.getElapsedTime();
-    cameraOffset.current.x = Math.sin(time * 0.3) * 0.5;
-    cameraOffset.current.y = Math.cos(time * 0.2) * 0.3;
-    
-    camera.position.x = cameraOffset.current.x;
-    camera.position.y = 2 + cameraOffset.current.y;
-    camera.lookAt(0, 0, 0);
+    // Only apply default camera movement in garage mode
+    if (cameraMode === 'garage') {
+      // Smooth sinusoidal camera movement
+      const time = clock.getElapsedTime();
+      cameraOffset.current.x = Math.sin(time * 0.3) * 0.5;
+      cameraOffset.current.y = Math.cos(time * 0.2) * 0.3;
+      
+      camera.position.x = cameraOffset.current.x;
+      camera.position.y = 2 + cameraOffset.current.y;
+      camera.lookAt(0, 0, 0);
+    }
   });
 
   return (
@@ -29,7 +32,7 @@ export function SceneContent() {
       <ParticleField />
       
       {/* Camera controller for different modes */}
-      <CameraController mode={cameraMode} cars={cars} />
+      <CameraController mode={cameraMode} exploreSubMode={exploreSubMode} cars={cars} />
       
       {/* Dynamic lighting based on scene mode */}
       <SceneLighting mode={sceneMode} />
