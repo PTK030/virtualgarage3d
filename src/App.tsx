@@ -2,8 +2,10 @@ import { Scene3D } from './components/Scene3D';
 import { Header } from './components/Header';
 import { ConfigPanel } from './components/ConfigPanel';
 import { ToastContainer } from './components/ToastContainer';
+import { AmbientAudio } from './components/AmbientAudio';
 import { GarageProvider, useGarageContext } from './contexts/GarageContext';
 import { EffectsProvider } from './contexts/EffectsContext';
+import { AudioProvider } from './contexts/AudioContext';
 import { useRef } from 'react';
 import './utils/debugStorage'; // Enable debug functions
 
@@ -62,6 +64,7 @@ function AppContent() {
   return (
     <div className="relative w-full h-full overflow-hidden bg-black" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
       <Scene3D />
+      <AmbientAudio mode={sceneMode === 'showroom' ? 'showroom' : cameraMode === 'explore' ? 'explore' : 'garage'} />
       <Header />
       <ConfigPanel
         cars={cars}
@@ -106,7 +109,9 @@ function App() {
   return (
     <GarageProvider>
       <EffectsProvider>
-        <AppContent />
+        <AudioProvider>
+          <AppContent />
+        </AudioProvider>
       </EffectsProvider>
     </GarageProvider>
   );
