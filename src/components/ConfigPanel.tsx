@@ -465,8 +465,8 @@ export function ConfigPanel({
                   lineHeight: '1.4'
                 }}>
                   {exploreSubMode === 'manual' 
-                    ? 'Use ← → arrows or A/D keys to switch between cars'
-                    : 'Camera automatically tours each car for 8 seconds'
+                    ? 'Use ← → arrows or A/D keys to switch between cars. Mouse to orbit around selected car.'
+                    : 'Camera automatically tours each car with cinematic 3-phase movement (6s each)'
                   }
                 </div>
               </div>

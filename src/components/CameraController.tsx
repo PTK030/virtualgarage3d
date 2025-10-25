@@ -43,12 +43,15 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
   // Keyboard controls for manual explore mode
   useEffect(() => {
     if (mode === 'explore' && exploreSubMode === 'manual') {
+      let keyPressed = false;
+      
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (cameraPath.length === 0) return;
+        if (cameraPath.length === 0 || keyPressed) return;
         
         // Prevent default to avoid page scrolling
         if (['ArrowLeft', 'ArrowRight', 'a', 'A', 'd', 'D'].includes(e.key)) {
           e.preventDefault();
+          keyPressed = true;
         }
         
         switch (e.key) {
@@ -68,28 +71,49 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
             break;
         }
       };
+      
+      const handleKeyUp = (e: KeyboardEvent) => {
+        if (['ArrowLeft', 'ArrowRight', 'a', 'A', 'd', 'D'].includes(e.key)) {
+          keyPressed = false;
+        }
+      };
 
       document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      document.addEventListener('keyup', handleKeyUp);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('keyup', handleKeyUp);
+      };
     }
-  }, [mode, exploreSubMode, cameraPath]);
+  }, [mode, exploreSubMode, cameraPath, onCarIndexChange]);
 
   useFrame((_, delta) => {
     if (mode === 'explore') {
       if (exploreSubMode === 'manual') {
-        // Manual mode - OrbitControls enabled but constrained to current car
-        if (orbitControlsRef.current && cameraPath.length > 0) {
-          orbitControlsRef.current.enabled = true;
+        // Manual mode - smooth transitions between cars
+        if (cameraPath.length > 0) {
           const currentCar = cameraPath[currentCarIndexRef.current];
-          orbitControlsRef.current.target.set(...currentCar.lookAt);
-          
-          // Position camera near the current car if not already positioned
           const [carX, carY, carZ] = currentCar.lookAt;
-          const distance = camera.position.distanceTo(new THREE.Vector3(carX, carY, carZ));
-          if (distance > 20) {
-            // Move camera closer to the car
-            targetPositionRef.current.set(carX + 5, carY + 3, carZ + 5);
-            camera.position.lerp(targetPositionRef.current, delta * 3);
+          
+          // Set target position for current car
+          const idealDistance = 8;
+          const idealHeight = 5;
+          const currentDistance = camera.position.distanceTo(new THREE.Vector3(carX, carY, carZ));
+          
+          // If camera is too far or we just switched cars, move to ideal position
+          if (currentDistance > 15 || Math.abs(targetPositionRef.current.x - (carX + idealDistance)) > 2) {
+            targetPositionRef.current.set(carX + idealDistance, carY + idealHeight, carZ + idealDistance);
+            targetLookAtRef.current.set(carX, carY + 0.5, carZ);
+            
+            // Smooth transition to new car
+            camera.position.lerp(targetPositionRef.current, delta * 2);
+            camera.lookAt(targetLookAtRef.current);
+          }
+          
+          // Enable OrbitControls after positioning
+          if (orbitControlsRef.current) {
+            orbitControlsRef.current.enabled = true;
+            orbitControlsRef.current.target.set(carX, carY + 0.5, carZ);
           }
         }
       } else {
@@ -99,10 +123,10 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
         }
 
         if (cameraPath.length > 0) {
-          exploreTimeRef.current += delta * 0.3; // Much slower progression
+          exploreTimeRef.current += delta * 0.4;
           
           const pathLength = cameraPath.length;
-          const cycleDuration = 8; // 8 seconds per car (doubled)
+          const cycleDuration = 6; // 6 seconds per car
           const totalCycleDuration = pathLength * cycleDuration;
           const progress = (exploreTimeRef.current % totalCycleDuration) / totalCycleDuration;
           const scaledProgress = progress * pathLength;
@@ -112,42 +136,66 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           // Update current car index for display
           if (currentCarIndexRef.current !== currentIndex) {
             currentCarIndexRef.current = currentIndex;
-            console.log('🎯 Auto viewing car:', cameraPath[currentIndex].carName, 'at position:', cameraPath[currentIndex].lookAt);
+            console.log('🎯 Auto viewing car:', cameraPath[currentIndex].carName);
             onCarIndexChange?.(currentIndex);
           }
           
-          // Get current car position and create camera position around it
+          // Get current car position
           const currentCar = cameraPath[currentIndex];
           const [carX, carY, carZ] = currentCar.lookAt;
           
-          // Create smoother circular motion around the car
-          const baseAngle = t * Math.PI * 1.5; // Slower rotation (3/4 circle per car)
-          const radius = 10; // Slightly larger radius
-          const height = 5; // Higher camera position
+          // Multi-phase camera movement for each car
+          const phase1Duration = 0.3; // 30% - approach and circle
+          const phase2Duration = 0.4; // 40% - detailed inspection
+          const phase3Duration = 0.3; // 30% - departure
           
-          // Add smooth easing to the angle for more natural movement
-          const easedT = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; // Ease in-out quad
-          const smoothAngle = easedT * Math.PI * 1.5;
+          let cameraX, cameraY, cameraZ;
           
-          const cameraX = carX + Math.cos(smoothAngle) * radius;
-          const cameraY = carY + height + Math.sin(exploreTimeRef.current * 0.2) * 0.5; // Gentler up/down
-          const cameraZ = carZ + Math.sin(smoothAngle) * radius;
+          if (t < phase1Duration) {
+            // Phase 1: Approach and start circling
+            const phaseT = t / phase1Duration;
+            const easeT = phaseT * phaseT * (3 - 2 * phaseT); // Smooth step
+            
+            const angle = easeT * Math.PI * 0.5; // Quarter circle approach
+            const radius = 12 - easeT * 4; // Start far, get closer
+            const height = 6 + easeT * 2; // Rise up
+            
+            cameraX = carX + Math.cos(angle) * radius;
+            cameraY = carY + height;
+            cameraZ = carZ + Math.sin(angle) * radius;
+            
+          } else if (t < phase1Duration + phase2Duration) {
+            // Phase 2: Detailed inspection - slow orbit
+            const phaseT = (t - phase1Duration) / phase2Duration;
+            const angle = Math.PI * 0.5 + phaseT * Math.PI * 1.2; // Continue orbiting
+            const radius = 8 + Math.sin(phaseT * Math.PI * 2) * 1; // Slight radius variation
+            const height = 8 + Math.sin(phaseT * Math.PI * 3) * 0.8; // Gentle height variation
+            
+            cameraX = carX + Math.cos(angle) * radius;
+            cameraY = carY + height;
+            cameraZ = carZ + Math.sin(angle) * radius;
+            
+          } else {
+            // Phase 3: Departure - move away smoothly
+            const phaseT = (t - phase1Duration - phase2Duration) / phase3Duration;
+            const easeT = 1 - (1 - phaseT) * (1 - phaseT); // Ease out
+            
+            const angle = Math.PI * 1.7 + easeT * Math.PI * 0.3; // Complete the circle
+            const radius = 8 + easeT * 6; // Move away
+            const height = 8 - easeT * 2; // Lower down
+            
+            cameraX = carX + Math.cos(angle) * radius;
+            cameraY = carY + height;
+            cameraZ = carZ + Math.sin(angle) * radius;
+          }
           
-          // Set camera position and look at car
+          // Set target position
           targetPositionRef.current.set(cameraX, cameraY, cameraZ);
-          targetLookAtRef.current.set(carX, carY, carZ);
+          targetLookAtRef.current.set(carX, carY + 0.5, carZ);
           
-          // Much smoother camera movement with slower lerp
-          camera.position.lerp(targetPositionRef.current, delta * 0.8);
-          
-          // Smooth look-at with slight delay for more natural feel
-          const lookAtTarget = new THREE.Vector3(carX, carY, carZ);
-          const currentLookAt = new THREE.Vector3();
-          camera.getWorldDirection(currentLookAt);
-          currentLookAt.multiplyScalar(-1).add(camera.position);
-          
-          currentLookAt.lerp(lookAtTarget, delta * 1.2);
-          camera.lookAt(currentLookAt);
+          // Smooth camera movement
+          camera.position.lerp(targetPositionRef.current, delta * 1.5);
+          camera.lookAt(targetLookAtRef.current);
         }
       }
     } else {
