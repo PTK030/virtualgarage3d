@@ -14,7 +14,9 @@ export function SceneContent() {
   // Handle camera car index changes in explore mode
   const handleCarIndexChange = (index: number) => {
     if (cameraMode === 'explore' && cars[index]) {
-      setSelectedCar(cars[index].id);
+      const car = cars[index];
+      console.log('🔄 Syncing UI selection - Index:', index, 'Car:', car.name, 'ID:', car.id);
+      setSelectedCar(car.id);
     }
   };
   const cameraOffset = useRef({ x: 0, y: 0 });

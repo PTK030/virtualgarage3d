@@ -29,11 +29,12 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
     
     return cars.map((car, index) => {
       const [x, y, z] = car.position;
-      console.log(`Car ${index}: ${car.name} at [${x}, ${y}, ${z}]`);
+      console.log(`Car ${index}: ${car.name} (ID: ${car.id}) at [${x}, ${y}, ${z}]`);
       return {
         position: [x + 6, y + 4, z + 6], // Slightly further offset for better view
         lookAt: [x, y + 0.5, z], // Look slightly above car center
         carIndex: index,
+        carId: car.id, // Store actual car ID
         carName: car.name
       };
     });
@@ -156,7 +157,8 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           // Update current car index for display
           if (currentCarIndexRef.current !== currentIndex) {
             currentCarIndexRef.current = currentIndex;
-            console.log('🎯 Auto viewing car:', cameraPath[currentIndex].carName);
+            const currentCar = cameraPath[currentIndex];
+            console.log('🎯 Auto viewing car:', currentCar.carName, 'ID:', currentCar.carId, 'Index:', currentIndex);
             onCarIndexChange?.(currentIndex);
           }
           
