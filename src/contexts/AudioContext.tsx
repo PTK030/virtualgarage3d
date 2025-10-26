@@ -37,7 +37,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     setVolumeState(Math.max(0, Math.min(1, newVolume)));
   };
 
-  // Generate synthetic sounds using Web Audio API
+  // Generate UI sound effects using Web Audio API
   const playSound = (soundType: 'click' | 'select' | 'hover') => {
     if (!isEnabled || !audioContextRef.current) return;
 
@@ -47,73 +47,62 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     // Create gain node for volume control
     const gainNode = ctx.createGain();
     gainNode.connect(ctx.destination);
-    gainNode.gain.value = volume;
+    gainNode.gain.value = volume * 0.5; // Reduced overall
 
     switch (soundType) {
       case 'click': {
-        // Sharp, quick click sound
+        // Modern UI click - short sine wave
         const oscillator = ctx.createOscillator();
         const clickGain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
         
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(800, now);
-        oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+        oscillator.frequency.setValueAtTime(1200, now);
+        oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.02);
         
-        clickGain.gain.setValueAtTime(0.3, now);
-        clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, now);
         
-        oscillator.connect(clickGain);
+        clickGain.gain.setValueAtTime(0.2, now);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+        
+        oscillator.connect(filter);
+        filter.connect(clickGain);
         clickGain.connect(gainNode);
         
         oscillator.start(now);
-        oscillator.stop(now + 0.05);
+        oscillator.stop(now + 0.02);
         break;
       }
       
       case 'select': {
-        // Soft, warm selection sound
-        const oscillator1 = ctx.createOscillator();
-        const oscillator2 = ctx.createOscillator();
+        // Pleasant selection sound - single rising tone
+        const oscillator = ctx.createOscillator();
         const selectGain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
         
-        oscillator1.type = 'sine';
-        oscillator1.frequency.setValueAtTime(440, now);
-        oscillator1.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(600, now);
+        oscillator.frequency.exponentialRampToValueAtTime(900, now + 0.08);
         
-        oscillator2.type = 'sine';
-        oscillator2.frequency.setValueAtTime(554, now);
-        oscillator2.frequency.exponentialRampToValueAtTime(1108, now + 0.15);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1500, now);
         
-        selectGain.gain.setValueAtTime(0.2, now);
-        selectGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        selectGain.gain.setValueAtTime(0.15, now);
+        selectGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
         
-        oscillator1.connect(selectGain);
-        oscillator2.connect(selectGain);
+        oscillator.connect(filter);
+        filter.connect(selectGain);
         selectGain.connect(gainNode);
         
-        oscillator1.start(now);
-        oscillator2.start(now);
-        oscillator1.stop(now + 0.2);
-        oscillator2.stop(now + 0.2);
+        oscillator.start(now);
+        oscillator.stop(now + 0.08);
         break;
       }
       
       case 'hover': {
-        // Very subtle hover sound
-        const oscillator = ctx.createOscillator();
-        const hoverGain = ctx.createGain();
-        
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(600, now);
-        
-        hoverGain.gain.setValueAtTime(0.05, now);
-        hoverGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-        
-        oscillator.connect(hoverGain);
-        hoverGain.connect(gainNode);
-        
-        oscillator.start(now);
-        oscillator.stop(now + 0.08);
+        // Disabled hover sound - was too frequent and annoying
+        // Only click and select sounds are used
         break;
       }
     }
