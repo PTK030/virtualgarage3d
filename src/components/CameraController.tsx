@@ -61,25 +61,33 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           case 'ArrowLeft':
           case 'a':
           case 'A':
-            currentCarIndexRef.current = (currentCarIndexRef.current - 1 + cameraPath.length) % cameraPath.length;
-            lastManualCarIndexRef.current = currentCarIndexRef.current;
-            isTransitioningRef.current = true; // Force camera transition
-            const leftCar = cameraPath[currentCarIndexRef.current];
-            if (leftCar && leftCar.carName) {
-              console.log('🎯 Manual switching to car:', leftCar.carName, 'Index:', currentCarIndexRef.current);
-              onCarIndexChange?.(currentCarIndexRef.current);
+            {
+              const oldIndex = currentCarIndexRef.current;
+              currentCarIndexRef.current = (currentCarIndexRef.current - 1 + cameraPath.length) % cameraPath.length;
+              lastManualCarIndexRef.current = currentCarIndexRef.current;
+              isTransitioningRef.current = true; // Force camera transition
+              const leftCar = cameraPath[currentCarIndexRef.current];
+              console.log('⬅️ LEFT pressed - switching from', oldIndex, 'to', currentCarIndexRef.current);
+              if (leftCar && leftCar.carName) {
+                console.log('🎯 Manual switching to car:', leftCar.carName, 'Index:', currentCarIndexRef.current);
+                onCarIndexChange?.(currentCarIndexRef.current);
+              }
             }
             break;
           case 'ArrowRight':
           case 'd':
           case 'D':
-            currentCarIndexRef.current = (currentCarIndexRef.current + 1) % cameraPath.length;
-            lastManualCarIndexRef.current = currentCarIndexRef.current;
-            isTransitioningRef.current = true; // Force camera transition
-            const rightCar = cameraPath[currentCarIndexRef.current];
-            if (rightCar && rightCar.carName) {
-              console.log('🎯 Manual switching to car:', rightCar.carName, 'Index:', currentCarIndexRef.current);
-              onCarIndexChange?.(currentCarIndexRef.current);
+            {
+              const oldIndex = currentCarIndexRef.current;
+              currentCarIndexRef.current = (currentCarIndexRef.current + 1) % cameraPath.length;
+              lastManualCarIndexRef.current = currentCarIndexRef.current;
+              isTransitioningRef.current = true; // Force camera transition
+              const rightCar = cameraPath[currentCarIndexRef.current];
+              console.log('➡️ RIGHT pressed - switching from', oldIndex, 'to', currentCarIndexRef.current);
+              if (rightCar && rightCar.carName) {
+                console.log('🎯 Manual switching to car:', rightCar.carName, 'Index:', currentCarIndexRef.current);
+                onCarIndexChange?.(currentCarIndexRef.current);
+              }
             }
             break;
         }
@@ -133,12 +141,13 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
               const newDistance = camera.position.distanceTo(targetPositionRef.current);
               if (newDistance < 1.5) {
                 isTransitioningRef.current = false;
-                console.log('✅ Transition complete to:', currentCar.carName);
+                console.log('✅ Transition complete to:', currentCar.carName, 'Index:', currentCarIndexRef.current, 'Distance:', newDistance.toFixed(2));
                 
                 // Update OrbitControls target after transition
                 if (orbitControlsRef.current) {
                   orbitControlsRef.current.target.set(carX, carY + 0.5, carZ);
                   orbitControlsRef.current.update();
+                  console.log('🎮 OrbitControls target updated and enabled');
                 }
               }
             } else {

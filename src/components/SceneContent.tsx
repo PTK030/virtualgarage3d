@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { ParticleField } from './ParticleField';
 import { GradientBackground } from './GradientBackground';
@@ -18,14 +18,14 @@ export function SceneContent() {
   const { cars, selectedCar, setSelectedCar, sceneMode, cameraMode, exploreSubMode, updateCar } = useGarageContext();
   const { effects } = useEffects();
   
-  // Handle camera car index changes in explore mode
-  const handleCarIndexChange = (index: number) => {
+  // Handle camera car index changes in explore mode - memoized to prevent event listener resets
+  const handleCarIndexChange = useCallback((index: number) => {
     if (cameraMode === 'explore' && cars[index]) {
       const car = cars[index];
       console.log('🔄 Syncing UI selection - Index:', index, 'Car:', car.name, 'ID:', car.id);
       setSelectedCar(car.id);
     }
-  };
+  }, [cameraMode, cars, setSelectedCar]);
 
   // Handle gravity off position updates
   const handleGravityPositionUpdate = (carId: number, newY: number) => {
