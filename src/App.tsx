@@ -87,7 +87,7 @@ function AppContent() {
         style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
       >
         <Scene3D />
-        <AmbientAudio mode={sceneMode === 'showroom' ? 'showroom' : cameraMode === 'explore' ? 'explore' : 'garage'} />
+        <AmbientAudio />
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: showIntro ? 0 : 1, y: showIntro ? -20 : 0 }}

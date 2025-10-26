@@ -5,7 +5,6 @@ import { type CarData } from './useGarage';
 export function useExploreSync(
   cars: CarData[],
   cameraMode: 'garage' | 'explore',
-  exploreSubMode: 'auto' | 'manual',
   currentCarIndex: number,
   onSelectCar: (id: number) => void
 ) {
