@@ -59,53 +59,43 @@ export function AmbientAudio({ mode }: AmbientAudioProps) {
     oscillatorsRef.current = [];
     gainNodesRef.current = [];
 
-    // Master gain for volume control
+    // Master gain for volume control - significantly reduced
     const masterGain = ctx.createGain();
     masterGain.connect(ctx.destination);
-    masterGain.gain.setValueAtTime(volume * 0.15, now); // Very subtle
+    masterGain.gain.setValueAtTime(volume * 0.02, now); // Much more subtle to avoid buzzing
 
     switch (mode) {
       case 'garage': {
-        // Low hum - garage ambient
+        // Low hum - garage ambient with filter
         const bassOsc = ctx.createOscillator();
         const bassGain = ctx.createGain();
+        const bassFilter = ctx.createBiquadFilter();
         
         bassOsc.type = 'sine';
-        bassOsc.frequency.setValueAtTime(60, now);
+        bassOsc.frequency.setValueAtTime(55, now); // Lower frequency
         
-        bassGain.gain.setValueAtTime(0.3, now);
+        bassFilter.type = 'lowpass';
+        bassFilter.frequency.setValueAtTime(200, now);
+        bassFilter.Q.setValueAtTime(1, now);
         
-        bassOsc.connect(bassGain);
+        bassGain.gain.setValueAtTime(0.15, now); // Reduced
+        
+        bassOsc.connect(bassFilter);
+        bassFilter.connect(bassGain);
         bassGain.connect(masterGain);
         bassOsc.start(now);
         
         oscillatorsRef.current.push(bassOsc);
         gainNodesRef.current.push(bassGain);
-
-        // Subtle high frequency for neon buzz
-        const neonOsc = ctx.createOscillator();
-        const neonGain = ctx.createGain();
-        
-        neonOsc.type = 'sawtooth';
-        neonOsc.frequency.setValueAtTime(120, now);
-        
-        neonGain.gain.setValueAtTime(0.05, now);
-        
-        neonOsc.connect(neonGain);
-        neonGain.connect(masterGain);
-        neonOsc.start(now);
-        
-        oscillatorsRef.current.push(neonOsc);
-        gainNodesRef.current.push(neonGain);
         break;
       }
 
       case 'showroom': {
-        // Cinematic synth pad
+        // Cinematic synth pad - simplified and filtered
         const pad1 = ctx.createOscillator();
         const pad2 = ctx.createOscillator();
-        const pad3 = ctx.createOscillator();
         const padGain = ctx.createGain();
+        const padFilter = ctx.createBiquadFilter();
         
         pad1.type = 'sine';
         pad1.frequency.setValueAtTime(220, now); // A3
@@ -113,63 +103,47 @@ export function AmbientAudio({ mode }: AmbientAudioProps) {
         pad2.type = 'sine';
         pad2.frequency.setValueAtTime(277.18, now); // C#4
         
-        pad3.type = 'sine';
-        pad3.frequency.setValueAtTime(329.63, now); // E4
+        padFilter.type = 'lowpass';
+        padFilter.frequency.setValueAtTime(800, now);
+        padFilter.Q.setValueAtTime(0.5, now);
         
-        padGain.gain.setValueAtTime(0.4, now);
+        padGain.gain.setValueAtTime(0.12, now); // Much reduced
         
-        pad1.connect(padGain);
-        pad2.connect(padGain);
-        pad3.connect(padGain);
+        pad1.connect(padFilter);
+        pad2.connect(padFilter);
+        padFilter.connect(padGain);
         padGain.connect(masterGain);
         
         pad1.start(now);
         pad2.start(now);
-        pad3.start(now);
         
-        oscillatorsRef.current.push(pad1, pad2, pad3);
+        oscillatorsRef.current.push(pad1, pad2);
         gainNodesRef.current.push(padGain);
-
-        // Subtle bass pulse
-        const bassOsc = ctx.createOscillator();
-        const bassGain = ctx.createGain();
-        
-        bassOsc.type = 'sine';
-        bassOsc.frequency.setValueAtTime(55, now); // A1
-        
-        bassGain.gain.setValueAtTime(0.2, now);
-        
-        bassOsc.connect(bassGain);
-        bassGain.connect(masterGain);
-        bassOsc.start(now);
-        
-        oscillatorsRef.current.push(bassOsc);
-        gainNodesRef.current.push(bassGain);
         break;
       }
 
       case 'explore': {
-        // Atmospheric ambient
+        // Atmospheric ambient - smooth and filtered
         const atmo1 = ctx.createOscillator();
-        const atmo2 = ctx.createOscillator();
         const atmoGain = ctx.createGain();
+        const atmoFilter = ctx.createBiquadFilter();
         
-        atmo1.type = 'triangle';
+        atmo1.type = 'sine'; // Changed to sine for smoother sound
         atmo1.frequency.setValueAtTime(110, now); // A2
         
-        atmo2.type = 'sine';
-        atmo2.frequency.setValueAtTime(165, now); // E3
+        atmoFilter.type = 'lowpass';
+        atmoFilter.frequency.setValueAtTime(400, now);
+        atmoFilter.Q.setValueAtTime(0.7, now);
         
-        atmoGain.gain.setValueAtTime(0.25, now);
+        atmoGain.gain.setValueAtTime(0.1, now); // Much reduced
         
-        atmo1.connect(atmoGain);
-        atmo2.connect(atmoGain);
+        atmo1.connect(atmoFilter);
+        atmoFilter.connect(atmoGain);
         atmoGain.connect(masterGain);
         
         atmo1.start(now);
-        atmo2.start(now);
         
-        oscillatorsRef.current.push(atmo1, atmo2);
+        oscillatorsRef.current.push(atmo1);
         gainNodesRef.current.push(atmoGain);
         break;
       }
