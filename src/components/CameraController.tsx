@@ -22,7 +22,7 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
   const isTransitioningRef = useRef(false);
 
   // Generate camera positions based on actual car positions
-  const generateCameraPath = () => {
+  const generateCameraPath = useMemo(() => {
     if (cars.length === 0) return [];
     
     console.log('🚗 Generating camera path for', cars.length, 'cars');
@@ -38,9 +38,9 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
         carName: car.name
       };
     });
-  };
+  }, [cars]);
 
-  const cameraPath = generateCameraPath();
+  const cameraPath = generateCameraPath;
 
   // Keyboard controls for manual explore mode
   useEffect(() => {
@@ -158,7 +158,7 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           if (currentCarIndexRef.current !== currentIndex) {
             currentCarIndexRef.current = currentIndex;
             const currentCar = cameraPath[currentIndex];
-            console.log('🎯 Auto viewing car:', currentCar.carName, 'ID:', currentCar.carId, 'Index:', currentIndex);
+            console.log('🎯 Auto viewing car:', currentCar.carName, 'ID:', currentCar.carId, 'Index:', currentIndex, 'Time:', exploreTimeRef.current.toFixed(2));
             onCarIndexChange?.(currentIndex);
           }
           
@@ -239,15 +239,17 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
       currentCarIndexRef.current = 0;
       isTransitioningRef.current = false;
     } else if (mode === 'explore') {
-      // Reset explore mode
-      exploreTimeRef.current = 0;
+      // Reset explore mode - start with a small delay to ensure first car is shown
+      exploreTimeRef.current = -0.5; // Start slightly before 0 to ensure first car shows
       currentCarIndexRef.current = 0;
       isTransitioningRef.current = true; // Force initial transition
       if (cameraPath.length > 0) {
-        console.log('🎯 Starting explore mode with car:', cameraPath[0].carName);
+        console.log('🎯 Starting explore mode with car:', cameraPath[0].carName, 'Reset time to:', exploreTimeRef.current);
+        // Immediately sync UI to first car
+        onCarIndexChange?.(0);
       }
     }
-  }, [mode, cameraPath]);
+  }, [mode, cameraPath, onCarIndexChange]);
 
   return (
     <>
