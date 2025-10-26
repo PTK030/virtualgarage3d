@@ -121,11 +121,6 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
               // Update last manual car index
               lastManualCarIndexRef.current = currentCarIndexRef.current;
               
-              // Disable OrbitControls during transition
-              if (orbitControlsRef.current) {
-                orbitControlsRef.current.enabled = false;
-              }
-              
               // Set new target position
               targetPositionRef.current.set(carX + idealDistance, carY + idealHeight, carZ + idealDistance);
               targetLookAtRef.current.set(carX, carY + 0.5, carZ);
@@ -139,12 +134,18 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
               if (newDistance < 1.5) {
                 isTransitioningRef.current = false;
                 console.log('✅ Transition complete to:', currentCar.carName);
+                
+                // Update OrbitControls target after transition
+                if (orbitControlsRef.current) {
+                  orbitControlsRef.current.target.set(carX, carY + 0.5, carZ);
+                  orbitControlsRef.current.update();
+                }
               }
             } else {
-              // Enable OrbitControls when not transitioning
-              if (orbitControlsRef.current) {
-                orbitControlsRef.current.enabled = true;
+              // Update OrbitControls target when not transitioning
+              if (orbitControlsRef.current && orbitControlsRef.current.enabled) {
                 orbitControlsRef.current.target.set(carX, carY + 0.5, carZ);
+                orbitControlsRef.current.update();
               }
             }
           } else {
@@ -152,10 +153,7 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
           }
         }
       } else {
-        // Auto mode - disable OrbitControls and animate
-        if (orbitControlsRef.current) {
-          orbitControlsRef.current.enabled = false;
-        }
+        // Auto mode - OrbitControls is already disabled via enabled prop
 
         if (cameraPath && cameraPath.length > 0) {
           exploreTimeRef.current += delta * 0.4;
@@ -261,6 +259,12 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
       currentCarIndexRef.current = 0;
       lastManualCarIndexRef.current = 0;
       isTransitioningRef.current = false;
+      
+      // Set OrbitControls target for garage mode
+      if (orbitControlsRef.current) {
+        orbitControlsRef.current.target.set(0, 0, 0);
+        orbitControlsRef.current.update();
+      }
     } else if (mode === 'explore') {
       // Reset explore mode - start with a small delay to ensure first car is shown
       exploreTimeRef.current = -0.5; // Start slightly before 0 to ensure first car shows
@@ -277,21 +281,19 @@ export function CameraController({ mode, exploreSubMode, cars, onCarIndexChange 
 
   return (
     <>
-      {(mode === 'garage' || (mode === 'explore' && exploreSubMode === 'manual')) && (
-        <OrbitControls
-          ref={orbitControlsRef}
-          enablePan={true}
-          enableZoom={true}
-          enableRotate={true}
-          dampingFactor={0.05}
-          enableDamping={true}
-          minDistance={3}
-          maxDistance={15}
-          minPolarAngle={Math.PI / 8}
-          maxPolarAngle={Math.PI / 2}
-          target={mode === 'garage' ? [0, 0, 0] : undefined}
-        />
-      )}
+      <OrbitControls
+        ref={orbitControlsRef}
+        enabled={mode === 'garage' || (mode === 'explore' && exploreSubMode === 'manual' && !isTransitioningRef.current)}
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        dampingFactor={0.05}
+        enableDamping={true}
+        minDistance={3}
+        maxDistance={15}
+        minPolarAngle={Math.PI / 8}
+        maxPolarAngle={Math.PI / 2}
+      />
     </>
   );
 }
