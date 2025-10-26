@@ -1,41 +1,42 @@
 import { useGLTF } from '@react-three/drei';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { type CarData } from './useGarage';
 import { useModelLoader } from './useModelLoader';
+import { type GLTF } from 'three-stdlib';
 
 // Hook that tries GLB first, then GLTF, then creates fallback geometry
 export function useGLTFWithFallback(car: CarData, color: string) {
   const modelUrl = useModelLoader(car);
+  const [loadError, setLoadError] = useState(false);
+  
+  // Try to load the model with error handling
+  let gltf: GLTF | undefined;
+  try {
+    if (modelUrl && !loadError) {
+      gltf = useGLTF(modelUrl);
+    }
+  } catch (error) {
+    console.error('❌ Failed to load model for:', car.name, error);
+    setLoadError(true);
+  }
   
   const result = useMemo(() => {
-    if (!car.isCustom) {
-      // For default models, use regular useGLTF
-      try {
-        const gltf = useGLTF(modelUrl);
-        return { scene: gltf.scene, isError: false };
-      } catch (error) {
-        console.error('❌ Failed to load default model:', error);
-        return createFallbackScene(color, car.name);
-      }
+    // If we have a successful GLTF load
+    if (gltf && gltf.scene && !loadError) {
+      console.log('✅ Model loaded successfully:', car.name);
+      return { scene: gltf.scene, isError: false };
     }
     
-    // For custom models, try different approaches
-    try {
-      console.log('🎯 Attempting to load custom model:', car.name);
-      
-      // First try: Load as provided
-      const gltf = useGLTF(modelUrl);
-      console.log('✅ Custom model loaded successfully:', car.name);
-      return { scene: gltf.scene, isError: false };
-      
-    } catch (error) {
-      console.error('❌ Failed to load custom model:', car.name, error);
-      
-      // Create fallback geometry
-      return createFallbackScene(color, car.name);
-    }
-  }, [modelUrl, car.isCustom, car.name, color]);
+    // Create fallback geometry
+    console.log('🔧 Creating fallback geometry for:', car.name);
+    return createFallbackScene(color, car.name);
+  }, [gltf, loadError, color, car.name]);
+  
+  // Reset error state when model URL changes
+  useEffect(() => {
+    setLoadError(false);
+  }, [modelUrl]);
   
   return result;
 }
@@ -44,16 +45,41 @@ function createFallbackScene(color: string, carName: string) {
   console.log('🔧 Creating fallback geometry for:', carName);
   
   const scene = new THREE.Group();
-  const geometry = new THREE.BoxGeometry(2, 1, 4);
-  const material = new THREE.MeshStandardMaterial({ 
+  
+  // Create a more detailed car-like fallback
+  const bodyGeometry = new THREE.BoxGeometry(2, 0.8, 4);
+  const bodyMaterial = new THREE.MeshStandardMaterial({ 
     color: color,
-    emissive: new THREE.Color(0x444444),
-    emissiveIntensity: 0.2,
-    metalness: 0.3,
-    roughness: 0.7
+    emissive: new THREE.Color(0x222222),
+    emissiveIntensity: 0.1,
+    metalness: 0.4,
+    roughness: 0.6
   });
-  const mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
+  const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
+  bodyMesh.position.y = 0.4;
+  scene.add(bodyMesh);
+  
+  // Add wheels
+  const wheelGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 8);
+  const wheelMaterial = new THREE.MeshStandardMaterial({ 
+    color: 0x333333,
+    metalness: 0.8,
+    roughness: 0.2
+  });
+  
+  const positions = [
+    [-0.8, 0.3, 1.2],  // front left
+    [0.8, 0.3, 1.2],   // front right
+    [-0.8, 0.3, -1.2], // rear left
+    [0.8, 0.3, -1.2]   // rear right
+  ];
+  
+  positions.forEach(([x, y, z]) => {
+    const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+    wheel.position.set(x, y, z);
+    wheel.rotation.z = Math.PI / 2;
+    scene.add(wheel);
+  });
   
   return { scene, isError: true };
 }
